@@ -1,0 +1,23 @@
+你是统计局信息中心的运维开发工程师。请用 Python 3 标准库写一个值班检查模块，只输出代码，不要解释。
+
+输入：
+1) assets：资产列表，每项字段 id/name/type/ip/host/port/owner/vendor/env/criticality/expires/last_success/schedule/target。type 取值 server/service/database/certificate/license/backup。
+2) alerts：告警列表，每项字段 id/time/host/service/severity/title/message/labels。severity 取值 critical/warning/info。
+3) now：当前时间 datetime。
+
+要求实现这些函数：
+- parse_dt(value)：解析 ISO 时间，失败返回 None。
+- dedupe_alerts(alerts)：按 (host, service, title) 合并重复告警，保留最新一条，增加 count、first_seen、last_seen，severity 取最高级。
+- check_backups(assets, now)：只检查 type=backup。last_success 为空 -> blocker；距今天数 > 48h -> blocker；> 26h -> warning；其余 ok。返回 findings 列表。
+- check_assets(assets, now)：证书/授权在 30 天内到期 -> warning；7 天内 -> blocker；生产资产 owner 为空 -> warning；生产 service 没有对应 backup（按 host 匹配）-> warning。
+- asset_search(assets, q)：按 name/ip/owner/vendor/host 模糊匹配，大小写不敏感。
+- build_findings(assets, alerts, now)：合并告警合并结果、备份检查、资产检查，按 severity（blocker/warning/info）排序。
+
+findings 每项统一结构：
+{"id":"F1","severity":"blocker|warning|info","source":"alert|backup|asset","title":"...","detail":"...","evidence":[{"asset":"...","field":"...","value":"..."}],"suggestion":"..."}
+
+代码要求：
+- 纯标准库，不依赖第三方包。
+- 时间比较用 timezone-aware datetime，遇到 naive datetime 按 +08:00 处理。
+- 不要编造资产；只根据输入判断。
+- 函数可单独测试，不要写 HTTP 服务。

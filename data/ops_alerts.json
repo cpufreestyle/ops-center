@@ -1,0 +1,66 @@
+{
+  "generated_at": "2026-11-16T21:55:00+08:00",
+  "note": "演示用合成告警，主机名与 IP 均为虚构",
+  "alerts": [
+    {
+      "id": "a-001",
+      "time": "2026-11-16T21:40:12+08:00",
+      "host": "srv-db-01",
+      "service": "db-stat",
+      "severity": "critical",
+      "title": "磁盘使用率 92%",
+      "message": "/data 使用率 92%，剩余 38GB；已连续 2 小时超过 90%",
+      "labels": {"mount": "/data", "value": "92"}
+    },
+    {
+      "id": "a-002",
+      "time": "2026-11-16T21:42:03+08:00",
+      "host": "srv-app-01",
+      "service": "svc-report",
+      "severity": "critical",
+      "title": "健康检查 502",
+      "message": "http://10.20.1.11:8080/health 连续 5 次返回 502",
+      "labels": {"url": "http://10.20.1.11:8080/health", "code": "502"}
+    },
+    {
+      "id": "a-003",
+      "time": "2026-11-16T21:43:30+08:00",
+      "host": "srv-app-01",
+      "service": "svc-report",
+      "severity": "warning",
+      "title": "健康检查 502",
+      "message": "同一服务重复告警：502 已持续 90 秒",
+      "labels": {"url": "http://10.20.1.11:8080/health", "code": "502"}
+    },
+    {
+      "id": "a-004",
+      "time": "2026-11-16T21:45:00+08:00",
+      "host": "srv-app-01",
+      "service": "svc-etl",
+      "severity": "warning",
+      "title": "抽取任务耗时超过阈值",
+      "message": "日终抽取任务 21:00 启动，当前已运行 45 分钟（阈值 30 分钟）",
+      "labels": {"job": "daily_etl", "minutes": "45"}
+    },
+    {
+      "id": "a-005",
+      "time": "2026-11-16T21:47:20+08:00",
+      "host": "srv-web-01",
+      "service": "svc-portal",
+      "severity": "warning",
+      "title": "证书将在 7 天内到期",
+      "message": "统计门户 TLS 证书 expires=2026-11-23",
+      "labels": {"cert": "cert-portal", "days": "7"}
+    },
+    {
+      "id": "a-006",
+      "time": "2026-11-16T21:49:10+08:00",
+      "host": "srv-file-01",
+      "service": "srv-file-01",
+      "severity": "info",
+      "title": "文件服务器 CPU 85%",
+      "message": "持续 10 分钟高于 80%，未影响服务",
+      "labels": {"cpu": "85"}
+    }
+  ]
+}

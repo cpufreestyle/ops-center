@@ -1,0 +1,179 @@
+from future import annotations
+
+from datetime import datetime, timezone, timedelta
+
+from typing import Any, Iterable, Optional
+
+CST = timezone(timedelta(hours=8))
+
+SEVERITY_RANK = {
+
+"blocker": 0,
+
+"warning": 1,
+
+"info": 2,
+
+}
+
+ALERT_SEVERITY_RANK = {
+
+"critical": 3,
+
+"warning": 2,
+
+"info": 1,
+
+}
+
+ALERT_TO_FINDING_SEVERITY = {
+
+"critical": "blocker",
+
+"warning": "warning",
+
+"info": "info",
+
+}
+
+def parse_dt(value: Any) -> Optional[datetime]:
+
+if isinstance(value, datetime):
+
+dt = value
+
+elif isinstance(value, str):
+
+text = value.strip()
+
+if not text:
+
+return None
+
+if text.endswith(("Z", "z")):
+
+text = text[:-1] + "+00:00"
+
+try:
+
+dt = datetime.fromisoformat(text)
+
+except (TypeError, ValueError, OverflowError):
+
+return None
+
+else:
+
+return None
+
+if dt.tzinfo is None or dt.utcoffset() is None: dt = dt.replace(tzinfo=CST) return dt
+
+def _normalize_now(now: datetime) -> datetime:
+
+parsed = parse_dt(now)
+
+if parsed is None:
+
+raise ValueError("now must be a valid datetime")
+
+return parsed
+
+def _text(value: Any) -> str:
+
+return "" if value is None else str(value)
+
+def _asset_ref(asset: dict[str, Any]) -> str:
+
+return _text(asset.get("id") or asset.get("name") or asset.get("host"))
+
+def _format_dt(dt: datetime) -> str:
+
+return dt.isoformat()
+
+def dedupe_alerts(alerts: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+
+groups: dict[tuple[Any, Any, Any], dict[str, Any]] = {}
+
+for index, alert in enumerate(alerts): item = dict(alert) key = ( item.get("host"), item.get("service"), item.get("title"), ) event_time = parse_dt(item.get("time")) severity = _text(item.get("severity")).lower() severity_rank = ALERT_SEVERITY_RANK.get(severity, 0) if key not in groups: groups[key] = { "latest": item, "latest_time": event_time, "latest_index": index, "count": 1, "first_time": event_time, "last_time": event_time, "highest_severity": severity, "highest_rank": severity_rank, } continue group = groups[key] group["count"] += 1 if event_time is not None: if group["first_time"] is None or event_time < group["first_time"]: group["first_time"] = event_time if group["last_time"] is None or event_time > group["last_time"]: group["last_time"] = event_time current_latest_time = group["latest_time"] is_later = ( event_time is not None and (current_latest_time is None or event_time > current_latest_time) ) same_or_unknown_time_is_later_input = ( event_time == current_latest_time and index > group["latest_index"] ) or ( event_time is None and current_latest_time is None and index > group["latest_index"] ) if is_later or same_or_unknown_time_is_later_input: group["latest"] = item group["latest_time"] = event_time group["latest_index"] = index if severity_rank > group["highest_rank"]: group["highest_rank"] = severity_rank group["highest_severity"] = severity result: list[dict[str, Any]] = [] for group in groups.values(): merged = dict(group["latest"]) first_time = group["first_time"] last_time = group["last_time"] merged["count"] = group["count"] merged["first_seen"] = _format_dt(first_time) if first_time else None merged["last_seen"] = _format_dt(last_time) if last_time else None merged["severity"] = group["highest_severity"] or "info" result.append(merged) result.sort( key=lambda item: ( parse_dt(item.get("last_seen")) is not None, parse_dt(item.get("last_seen")) or datetime.min.replace(tzinfo=CST), ), reverse=True, ) return result
+
+def check_backups(
+
+assets: Iterable[dict[str, Any]],
+
+now: datetime,
+
+) -> list[dict[str, Any]]:
+
+current = _normalize_now(now)
+
+findings: list[dict[str, Any]] = []
+
+for asset in assets: if _text(asset.get("type")).lower() != "backup": continue asset_ref = _asset_ref(asset) last_success_raw = asset.get("last_success") last_success = parse_dt(last_success_raw) if last_success is None: findings.append( { "id": "", "severity": "blocker", "source": "backup", "title": "备份无有效成功记录", "detail": f"备份资产 {asset_ref} 的 last_success 为空或无法解析。", "evidence": [ { "asset": asset_ref, "field": "last_success", "value": _text(last_success_raw), } ], "suggestion": "立即核查备份任务状态并执行一次可验证的备份。", } ) continue age = current - last_success.astimezone(current.tzinfo) age_hours = age.total_seconds() / 3600 if age_hours > 48: severity = "blocker" title = "备份超时超过 48 小时" suggestion = "立即排查备份失败原因，补做备份并验证恢复可用性。" elif age_hours > 26: severity = "warning" title = "备份超时超过 26 小时" suggestion = "尽快检查备份调度和执行日志，确认下一次备份能够成功。" else: continue findings.append( { "id": "", "severity": severity, "source": "backup", "title": title, "detail": ( f"备份资产 {asset_ref} 距最近成功备份" f" {age_hours:.1f} 小时。" ), "evidence": [ { "asset": asset_ref, "field": "last_success", "value": _format_dt(last_success), } ], "suggestion": suggestion, } ) return findings
+
+def check_assets(
+
+assets: Iterable[dict[str, Any]],
+
+now: datetime,
+
+) -> list[dict[str, Any]]:
+
+current = _normalize_now(now)
+
+asset_list = list(assets)
+
+findings: list[dict[str, Any]] = []
+
+backup_hosts = { _text(asset.get("host")).strip().casefold() for asset in asset_list if _text(asset.get("type")).lower() == "backup" and _text(asset.get("host")).strip() } for asset in asset_list: asset_type = _text(asset.get("type")).lower() env = _text(asset.get("env")).strip().casefold() asset_ref = _asset_ref(asset) if asset_type in {"certificate", "license"}: expires_raw = asset.get("expires") expires = parse_dt(expires_raw) if expires is not None: remaining = expires.astimezone(current.tzinfo) - current remaining_days = remaining.total_seconds() / 86400 if remaining_days <= 7: severity = "blocker" title = ( "证书将在 7 天内到期" if asset_type == "certificate" else "授权将在 7 天内到期" ) suggestion = "立即办理续期或更换，并验证更新后的有效期。" elif remaining_days <= 30: severity = "warning" title = ( "证书将在 30 天内到期" if asset_type == "certificate" else "授权将在 30 天内到期" ) suggestion = "尽快安排续期，避免影响生产运行。" else: severity = "" if severity: findings.append( { "id": "", "severity": severity, "source": "asset", "title": title, "detail": ( f"资产 {asset_ref} 的到期时间为" f" {_format_dt(expires)}，剩余 {remaining_days:.1f} 天。" ), "evidence": [ { "asset": asset_ref, "field": "expires", "value": _format_dt(expires), } ], "suggestion": suggestion, } ) if env in {"prod", "production", "生产", "生产环境"}: if not _text(asset.get("owner")).strip(): findings.append( { "id": "", "severity": "warning", "source": "asset", "title": "生产资产缺少负责人", "detail": f"生产资产 {asset_ref} 的 owner 为空。", "evidence": [ { "asset": asset_ref, "field": "owner", "value": "", } ], "suggestion": "补充明确的资产负责人并纳入值班联系清单。", } ) if asset_type == "service": host = _text(asset.get("host")).strip() if not host or host.casefold() not in backup_hosts: findings.append( { "id": "", "severity": "warning", "source": "asset", "title": "生产服务缺少对应备份", "detail": ( f"生产服务资产 {asset_ref} 未找到按 host 匹配的备份资产。" ), "evidence": [ { "asset": asset_ref, "field": "host", "value": host, } ], "suggestion": "为该生产服务配置对应备份资产并验证备份任务。", } ) return findings
+
+def asset_search(
+
+assets: Iterable[dict[str, Any]],
+
+q: Any,
+
+) -> list[dict[str, Any]]:
+
+query = _text(q).strip().casefold()
+
+asset_list = list(assets)
+
+if not query:
+
+return asset_list
+
+fields = ("name", "ip", "owner", "vendor", "host") return [ asset for asset in asset_list if any(query in _text(asset.get(field)).casefold() for field in fields) ]
+
+def _alert_findings(
+
+alerts: Iterable[dict[str, Any]],
+
+) -> list[dict[str, Any]]:
+
+findings: list[dict[str, Any]] = []
+
+for alert in dedupe_alerts(alerts): severity = ALERT_TO_FINDING_SEVERITY.get( _text(alert.get("severity")).lower(), "info", ) host = _text(alert.get("host")) service = _text(alert.get("service")) title = _text(alert.get("title")) or "未命名告警" message = _text(alert.get("message")) count = int(alert.get("count") or 1) first_seen = _text(alert.get("first_seen")) last_seen = _text(alert.get("last_seen")) asset_ref = host or service findings.append( { "id": "", "severity": severity, "source": "alert", "title": title, "detail": ( f"{message}" f"{'；' if message else ''}重复次数 {count}，" f"首次出现 {first_seen or '未知'}，" f"最近出现 {last_seen or '未知'}。" ), "evidence": [ { "asset": asset_ref, "field": "host", "value": host, }, { "asset": asset_ref, "field": "service", "value": service, }, { "asset": asset_ref, "field": "alert_id", "value": _text(alert.get("id")), }, ], "suggestion": "根据告警内容核查相关主机或服务，并确认告警已恢复或完成处置。", } ) return findings
+
+def build_findings(
+
+assets: Iterable[dict[str, Any]],
+
+alerts: Iterable[dict[str, Any]],
+
+now: datetime,
+
+) -> list[dict[str, Any]]:
+
+asset_list = list(assets)
+
+findings = (
+
+_alert_findings(alerts)
+
++ check_backups(asset_list, now)
+
++ check_assets(asset_list, now)
+
+)
+
+findings.sort( key=lambda item: ( SEVERITY_RANK.get(item.get("severity"), 99), _text(item.get("source")), _text(item.get("title")), _text(item.get("detail")), ) ) for index, finding in enumerate(findings, start=1): finding["id"] = f"F{index}" return findings

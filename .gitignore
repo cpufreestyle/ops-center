@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# 本地密钥与会话
+.env
+**/.xhx-profile/
+**/state.json
+
+# 真实运维数据：只在本机，绝不提交
+data/inbox/*.csv
+data/ops_audit.jsonl
+data/private/
+docs/xhx/screenshot_*.png
+
+# 生成物
+zonguan/runs/
+zonguan/corpus/*.pdf
+zonguan/*.db

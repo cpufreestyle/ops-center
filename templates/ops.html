@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>运维值班台</title>
+<style>
+:root{--bg:#0b0d14;--card:#151926;--line:#252b3d;--text:#e8ecf6;--muted:#8b93a7;--accent:#7c5cff;--green:#39d98a;--amber:#ffb547;--red:#ff6b6b;--blue:#5aa7ff}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 600px at 15% -10%,#1a1730,#0b0d14 55%);color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}
+header{padding:24px 30px 10px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{margin:0;font-size:25px;letter-spacing:-.5px}h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:13px;margin-top:5px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+button{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:9px 13px;font-weight:600;cursor:pointer}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+button:disabled{opacity:.5;cursor:wait}
+main{padding:10px 30px 40px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px}
+.stat b{display:block;font-size:24px;letter-spacing:-1px}.stat span{color:var(--muted);font-size:12px}
+.tabs{display:flex;gap:6px;margin:14px 0;flex-wrap:wrap}
+.tab{padding:7px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted);cursor:pointer;font-size:13px}
+.tab.active{background:rgba(124,92,255,.18);border-color:rgba(124,92,255,.55);color:#c9bcff}
+.grid{display:grid;grid-template-columns:1.35fr .65fr;gap:16px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:16px;padding:16px}
+.card h2{margin:0 0 10px;font-size:13px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.finding{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:9px 0;background:#0d1020}
+.finding.blocker{border-color:rgba(255,107,107,.55)}.finding.warning{border-color:rgba(255,181,71,.45)}.finding.info{border-color:rgba(90,167,255,.35)}
+.finding .top{display:flex;gap:8px;align-items:center;margin-bottom:5px}
+.badge{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.badge.blocker{color:#ffb3b3;border-color:rgba(255,107,107,.5);background:rgba(255,107,107,.1)}
+.badge.warning{color:#ffd79a;border-color:rgba(255,181,71,.5);background:rgba(255,181,71,.1)}
+.badge.info{color:#b7d8ff;border-color:rgba(90,167,255,.45);background:rgba(90,167,255,.1)}
+.finding b{font-size:14px}.finding .detail{color:#c9d1e6;margin:4px 0}
+.finding .suggestion{color:var(--muted);font-size:12px}
+.finding .evidence{color:#9aa3b8;font-size:12px;margin-top:5px;line-height:1.5}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px 7px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}
+th{color:var(--muted);font-size:12px;font-weight:600}
+.tag{display:inline-block;padding:1px 7px;border-radius:999px;background:rgba(124,92,255,.14);color:#b9a9ff;font-size:11px}
+input[type=text]{width:100%;background:#0d1020;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 11px;outline:none}
+pre{white-space:pre-wrap;font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;color:#c9d1e6;background:#0d1020;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:520px;overflow:auto}
+.muted{color:var(--muted);font-size:12px}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>运维 <span>值班台</span></h1>
+    <div class="sub">告警合并 · 备份时效 · 资产台账 · 交接班</div>
+  </div>
+  <div class="row">
+    <span class="badge" id="source">数据源：…</span>
+    <span class="badge" id="stamp">加载中…</span>
+    <button class="ghost" id="refresh">刷新</button>
+    <button id="xhxBtn">小浣熊交接 PPT</button>
+  </div>
+</header>
+<main>
+  <div class="stats">
+    <div class="stat"><b id="sAssets">0</b><span>资产</span></div>
+    <div class="stat"><b id="sAlerts">0</b><span>原始告警</span></div>
+    <div class="stat"><b id="sMerged">0</b><span>合并后告警</span></div>
+    <div class="stat"><b id="sBackup">0</b><span>备份异常</span></div>
+    <div class="stat"><b id="sExpire">0</b><span>30 天内到期</span></div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="findings">发现</div>
+    <div class="tab" data-tab="alerts">告警</div>
+    <div class="tab" data-tab="backups">备份</div>
+    <div class="tab" data-tab="assets">资产台账</div>
+    <div class="tab" data-tab="handover">交接班</div>
+  </div>
+  <div class="grid">
+    <div>
+      <div class="card" id="panel-findings">
+        <h2>值班发现</h2>
+        <div id="findings"></div>
+      </div>
+      <div class="card" id="panel-alerts" style="display:none">
+        <h2>告警（已合并）</h2>
+        <table><thead><tr><th>级别</th><th>主机/服务</th><th>标题</th><th>次数</th><th>最近</th></tr></thead><tbody id="alertsBody"></tbody></table>
+      </div>
+      <div class="card" id="panel-backups" style="display:none">
+        <h2>备份时效</h2>
+        <table><thead><tr><th>备份</th><th>主机</th><th>计划</th><th>最近成功</th></tr></thead><tbody id="backupsBody"></tbody></table>
+      </div>
+      <div class="card" id="panel-assets" style="display:none">
+        <h2>资产台账</h2>
+        <input type="text" id="assetSearch" placeholder="搜索名称 / IP / 负责人 / 厂商 / 主机">
+        <table style="margin-top:10px"><thead><tr><th>名称</th><th>类型</th><th>IP/主机</th><th>负责人</th><th>环境</th></tr></thead><tbody id="assetsBody"></tbody></table>
+      </div>
+      <div class="card" id="panel-handover" style="display:none">
+        <h2>交接班</h2>
+        <pre id="handover"></pre>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>值班提示</h2>
+        <div class="muted" id="hint">加载中…</div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>小浣熊 · PPT 任务包</h2>
+        <div class="muted">把下面这段贴到办公小浣熊，生成 8 页交接班汇报大纲。</div>
+        <pre id="xhxPrompt" style="margin-top:10px"></pre>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+let state = null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sevLabel = {blocker:'阻断', warning:'警告', info:'提示'};
+const srcLabel = {alert:'告警', backup:'备份', asset:'资产'};
+
+async function load() {
+  $('stamp').textContent = '加载中…';
+  const r = await fetch('/api/state'); state = await r.json();
+  $('stamp').textContent = state.generated_at.slice(0, 16).replace('T', ' ');
+  $('source').textContent = '数据源：' + (state.source === 'demo' ? '演示' : state.source.replace('csv:', 'CSV '));
+  $('sAssets').textContent = state.assets.total;
+  $('sAlerts').textContent = state.alerts.raw;
+  $('sMerged').textContent = state.alerts.merged;
+  $('sBackup').textContent = state.backups.blocker + state.backups.warning;
+  $('sExpire').textContent = state.assets.expiring;
+  $('hint').textContent = `阻断 ${state.counts.blocker} · 警告 ${state.counts.warning} · 提示 ${state.counts.info}；备份正常 ${state.backups.ok}/${state.backups.total}。`;
+  renderFindings();
+  renderAlerts();
+  renderBackups();
+  renderAssets(state.assets_list);
+  $('handover').textContent = state.handover;
+  $('xhxPrompt').textContent = state.xhx_prompt;
+}
+
+function renderFindings() {
+  const box = $('findings');
+  if (!state.findings.length) { box.innerHTML = '<div class="muted">没有发现。</div>'; return; }
+  box.innerHTML = state.findings.map(f => {
+    const evidence = (f.evidence || []).slice(0, 3).map(e => `[${esc(e.asset)}] ${esc(e.field)}=${esc(e.value)}`).join('；');
+    return `<div class="finding ${f.severity}" data-id="${f.id}">
+      <div class="top"><span class="badge ${f.severity}">${sevLabel[f.severity] || f.severity}</span><span class="badge">${srcLabel[f.source] || f.source}</span><span class="muted">${f.id}</span></div>
+      <b>${esc(f.title)}</b>
+      <div class="detail">${esc(f.detail)}</div>
+      <div class="suggestion">建议：${esc(f.suggestion)}${f.owner ? ' · 负责人：' + esc(f.owner) : ''}</div>
+      <div class="evidence">${esc(evidence)}</div>
+      <div class="row" style="margin-top:7px"><button class="ghost" onclick="ack('${f.id}')">确认</button></div>
+    </div>`;
+  }).join('');
+}
+
+function renderAlerts() {
+  $('alertsBody').innerHTML = state.alerts_list.map(a => `<tr>
+    <td><span class="badge ${a.severity === 'critical' ? 'blocker' : a.severity === 'warning' ? 'warning' : 'info'}">${esc(a.severity)}</span></td>
+    <td>${esc(a.host)}<br><span class="muted">${esc(a.service)}</span></td>
+    <td>${esc(a.title)}<br><span class="muted">${esc(a.message).slice(0, 80)}</span></td>
+    <td>${a.count || 1}</td>
+    <td>${esc((a.last_seen || a.time || '').slice(0, 19).replace('T', ' '))}</td>
+  </tr>`).join('');
+}
+
+function renderBackups() {
+  const rows = (state.assets_list || []).filter(a => a.type === 'backup');
+  $('backupsBody').innerHTML = rows.map(a => `<tr>
+    <td>${esc(a.name)}</td><td>${esc(a.host)}</td><td>${esc(a.schedule)}</td>
+    <td>${esc(a.last_success || '无记录')}</td>
+  </tr>`).join('');
+}
+
+function renderAssets(rows) {
+  $('assetsBody').innerHTML = rows.map(a => `<tr>
+    <td>${esc(a.name)}<br><span class="muted">${esc(a.id)}</span></td>
+    <td><span class="tag">${esc(a.type)}</span></td>
+    <td>${esc(a.ip || a.host || '')}${a.port ? ':' + esc(a.port) : ''}</td>
+    <td>${esc(a.owner || '—')}</td><td>${esc(a.env || '')}</td>
+  </tr>`).join('');
+}
+
+async function ack(id) {
+  await fetch('/api/ack', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, action:'ack'})});
+  const el = document.querySelector(`[data-id="${id}"]`);
+  if (el) { el.style.opacity = .45; el.querySelector('button').textContent = '已确认'; }
+}
+
+document.querySelectorAll('.tab').forEach(tab => tab.onclick = () => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  ['findings','alerts','backups','assets','handover'].forEach(name => {
+    $('panel-' + name).style.display = name === tab.dataset.tab ? '' : 'none';
+  });
+});
+
+$('refresh').onclick = load;
+$('xhxBtn').onclick = () => { $('xhxPrompt').scrollIntoView({behavior:'smooth', block:'center'}); };
+$('assetSearch').addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  renderAssets((state.assets_list || []).filter(a => [a.name,a.id,a.ip,a.host,a.owner,a.vendor,a.type].some(v => String(v||'').toLowerCase().includes(q))));
+});
+load();
+</script>
+</body>
+</html>
