@@ -64,3 +64,12 @@ python3 -m unittest tests.test_ops_center -v
 ```
 
 `check` 会校验表头、告警级别、时间格式、资产类型和到期日；数据源有问题会直接标出来。
+
+## 发布与交接
+
+- 当前版本：`v0.1.1`（交接补丁）
+- Gitee：https://gitee.com/cpufreestyle/ops-center
+- Gitee Releases：https://gitee.com/cpufreestyle/ops-center/releases
+- GitHub：https://github.com/cpufreestyle/ops-center
+- GitHub Release：https://github.com/cpufreestyle/ops-center/releases/tag/v0.1.1
+- 交接文档：[HANDOFF.md](HANDOFF.md)

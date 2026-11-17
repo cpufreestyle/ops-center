@@ -2,6 +2,8 @@
 
 给信息中心值班用的小工具：把监控告警、备份结果、资产台账三份导出数据，变成“今天必须处理什么”和一份交接班。
 
+当前版本：`v0.1.1`（交接补丁） · [Gitee](https://gitee.com/cpufreestyle/ops-center) · [GitHub](https://github.com/cpufreestyle/ops-center)
+
 ![值班台](docs/ops-center.png)
 
 ## 能做什么
@@ -44,8 +46,16 @@ Kindle 和 Mac 连同一个 Wi-Fi，浏览器打开 `http://<Mac-IP>:8890/kindle
 python3 -m unittest tests.test_ops_center -v
 ```
 
+## 发布
+
+- Gitee 仓库：https://gitee.com/cpufreestyle/ops-center
+- Gitee Releases：https://gitee.com/cpufreestyle/ops-center/releases
+- GitHub 仓库：https://github.com/cpufreestyle/ops-center
+- GitHub Release：https://github.com/cpufreestyle/ops-center/releases/tag/v0.1.1
+
 ## 文档
 
+- [HANDOFF.md](HANDOFF.md)：项目交接、运行、数据契约、验收、限制与下一步
 - [OPS_CENTER.md](OPS_CENTER.md)：使用说明和每天 5 分钟流程
 - [data/inbox/README.md](data/inbox/README.md)：CSV 字段
 - [docs/商业化方案.md](docs/商业化方案.md)：客户、定价、90 天试点
