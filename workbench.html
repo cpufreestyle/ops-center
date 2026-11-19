@@ -1,0 +1,617 @@
+<div id="wb-root">
+<style>
+#wb-root{--bg:#f4f5f8;--sf:#ffffff;--tx:#1c2333;--mu:#68718a;--bd:#e3e6ee;--ac:#4f46e5;--ac-bg:#eef0fe;--red:#d92d20;--red-bg:#fef1f0;--amb:#b45309;--amb-bg:#fdf4e7;--grn:#067647;--grn-bg:#ecfdf3;--blu:#175cd3;--blu-bg:#eff6ff;--r:12px;font:14px/1.6 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--tx);background:var(--bg);border-radius:14px;overflow:hidden}
+#wb-root *{box-sizing:border-box}
+#wb-root button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+#wb-shell{display:flex;min-height:560px}
+#wb-rail{width:168px;flex:none;background:var(--sf);border-right:1px solid var(--bd);padding:14px 10px;display:flex;flex-direction:column;gap:2px}
+#wb-logo{display:flex;align-items:center;gap:8px;padding:4px 8px 14px;font-weight:700;font-size:15px}
+#wb-logo svg{flex:none}
+.wb-nav{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:9px;color:var(--mu);font-weight:500;text-align:left;width:100%}
+.wb-nav:hover{background:var(--bg)}
+.wb-nav.on{background:var(--ac-bg);color:var(--ac);font-weight:600}
+.wb-nav .cnt{margin-left:auto;font-size:11px;background:var(--red-bg);color:var(--red);border-radius:99px;padding:0 7px;font-weight:700}
+.wb-nav .cnt.zero{display:none}
+#wb-main{flex:1;min-width:0;padding:18px 20px 26px}
+.wb-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.wb-head h2{margin:0;font-size:19px;letter-spacing:-.3px}
+.wb-head .sub{color:var(--mu);font-size:12px}
+.wb-demo{font-size:11px;color:var(--amb);background:var(--amb-bg);border:1px solid #f3e2c3;border-radius:99px;padding:2px 10px}
+.wb-grid{display:grid;gap:12px}
+.wb-c4{grid-template-columns:repeat(4,1fr)}
+.wb-c2{grid-template-columns:1.4fr 1fr}
+.wb-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px}
+.wb-card h3{margin:0 0 10px;font-size:12px;color:var(--mu);font-weight:600;letter-spacing:.04em}
+.wb-kpi b{display:block;font-size:26px;letter-spacing:-1px;line-height:1.2}
+.wb-kpi span{font-size:12px;color:var(--mu)}
+.wb-kpi.hot b{color:var(--red)}
+.wb-row{display:flex;align-items:center;gap:8px;padding:9px 2px;border-bottom:1px solid var(--bd)}
+.wb-row:last-child{border-bottom:0}
+.wb-row .grow{flex:1;min-width:0}
+.wb-row .t{font-weight:600;font-size:13px}
+.wb-row .d{color:var(--mu);font-size:12px;overflow-wrap:anywhere}
+.wb-badge{flex:none;font-size:11px;font-weight:600;border-radius:99px;padding:1px 9px}
+.b-red{color:var(--red);background:var(--red-bg)}
+.b-amb{color:var(--amb);background:var(--amb-bg)}
+.b-grn{color:var(--grn);background:var(--grn-bg)}
+.b-blu{color:var(--blu);background:var(--blu-bg)}
+.b-mut{color:var(--mu);background:var(--bg)}
+.wb-btn{background:var(--ac);color:#fff;border-radius:9px;padding:7px 13px;font-weight:600;font-size:13px;white-space:nowrap;flex:none}
+.wb-btn:hover{filter:brightness(1.08)}
+.wb-btn.ghost{background:var(--sf);border:1px solid var(--bd);color:var(--tx);font-weight:500}
+.wb-btn.sm{padding:4px 10px;font-size:12px}
+.wb-btn:disabled{opacity:.45;cursor:default}
+.wb-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.wb-chip{border:1px solid var(--bd);background:var(--sf);border-radius:99px;padding:4px 12px;font-size:12px;color:var(--mu)}
+.wb-chip[aria-pressed="true"]{background:var(--ac-bg);border-color:var(--ac);color:var(--ac);font-weight:600}
+.wb-input{border:1px solid var(--bd);border-radius:9px;padding:8px 11px;font:inherit;background:var(--sf);color:var(--tx);width:100%}
+.wb-input:focus{outline:2px solid var(--ac);outline-offset:1px}
+.wb-empty{color:var(--mu);text-align:center;padding:26px 10px;font-size:13px}
+.wb-link{color:var(--ac);font-weight:600;font-size:12px;padding:2px 4px}
+.wb-done .t{text-decoration:line-through;color:var(--mu)}
+.wb-view{display:none}
+.wb-view.on{display:block}
+#wb-toast{position:sticky;bottom:10px;margin:10px auto 0;width:fit-content;max-width:90%;background:var(--tx);color:#fff;border-radius:99px;padding:7px 18px;font-size:12px;opacity:0;transition:opacity .25s;pointer-events:none}
+#wb-toast.show{opacity:1}
+@media(max-width:860px){#wb-shell{flex-direction:column}#wb-rail{width:100%;flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--bd);padding:8px}#wb-logo{display:none}.wb-nav{white-space:nowrap;width:auto}.wb-c4{grid-template-columns:repeat(2,1fr)}.wb-c2{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){#wb-root *{transition:none!important}}
+</style>
+<div id="wb-shell">
+<nav id="wb-rail" aria-label="工作台导航">
+<div id="wb-logo"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="1" y="1" width="20" height="20" rx="6" fill="#4f46e5"/><path d="M6 12l3 3 7-7" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>全能工作台</div>
+<button type="button" class="wb-nav on" data-v="home">今日总览</button>
+<button type="button" class="wb-nav" data-v="ops">值班运维<span class="cnt" id="navOps"></span></button>
+<button type="button" class="wb-nav" data-v="report">备份核查<span class="cnt" id="navRep"></span></button>
+<button type="button" class="wb-nav" data-v="tasks">任务待办<span class="cnt" id="navTask"></span></button>
+<button type="button" class="wb-nav" data-v="sched">日程会议</button>
+<button type="button" class="wb-nav" data-v="docs">文档报告</button>
+<button type="button" class="wb-nav" data-v="ai">小浣熊助手</button>
+</nav>
+<div id="wb-main"><section class="wb-view on" id="v-home" aria-label="今日总览">
+<div class="wb-head"><div><h2>早上好，michael</h2><div class="sub">2026-11-18 周三 · 宝山区统计局 · 这里汇总你今天所有要处理的事</div></div><span class="wb-demo">演示数据 · 全部为合成示例</span></div>
+<div class="wb-grid wb-c4">
+<div class="wb-card wb-kpi hot"><b id="kBlock">0</b><span>值班阻断项</span></div>
+<div class="wb-card wb-kpi hot"><b id="kRep">0</b><span>备份待核实异常</span></div>
+<div class="wb-card wb-kpi"><b id="kTask">0</b><span>今日待办任务</span></div>
+<div class="wb-card wb-kpi"><b id="kMeet">0</b><span>今日会议</span></div>
+</div>
+<div class="wb-grid wb-c2" style="margin-top:12px">
+<div class="wb-card"><h3>今天必须处理（跨模块汇总）</h3><div id="homeUrgent"></div></div>
+<div class="wb-card"><h3>今日日程</h3><div id="homeSched"></div>
+<h3 style="margin-top:14px">快捷入口</h3>
+<div class="wb-chips" style="margin:0">
+<button type="button" class="wb-chip" data-go="ai">问小浣熊：今天先干什么</button>
+<button type="button" class="wb-chip" data-go="report">继续备份核查</button>
+<button type="button" class="wb-chip" data-go="docs">生成今日交接班</button>
+</div></div>
+</div>
+</section>
+
+<section class="wb-view" id="v-ops" aria-label="值班运维">
+<div class="wb-head"><div><h2>值班运维</h2><div class="sub">告警合并 · 备份时效 · 资产风险 · 与运维值班台同一套规则口径</div></div><span class="wb-demo">合成演示数据</span></div>
+<div class="wb-chips" id="opsChips" role="group" aria-label="发现筛选">
+<button type="button" class="wb-chip" data-f="all" aria-pressed="true">全部</button>
+<button type="button" class="wb-chip" data-f="blocker" aria-pressed="false">阻断</button>
+<button type="button" class="wb-chip" data-f="warning" aria-pressed="false">警告</button>
+<button type="button" class="wb-chip" data-f="info" aria-pressed="false">提示</button>
+<button type="button" class="wb-chip" data-f="open" aria-pressed="false">未确认</button>
+</div>
+<div class="wb-card"><div id="opsList"></div></div>
+<div class="wb-grid wb-c2" style="margin-top:12px">
+<div class="wb-card"><h3>备份时效（日备 26/48h · 周备 168/240h）</h3><div id="opsBackup"></div></div>
+<div class="wb-card"><h3>资产速查</h3><input class="wb-input" id="opsSearch" type="text" placeholder="搜索名称 / IP / 负责人 / 主机" aria-label="资产搜索"><div id="opsAssets" style="margin-top:8px;max-height:260px;overflow:auto"></div></div>
+</div>
+</section>
+
+<section class="wb-view" id="v-report" aria-label="备份核查">
+<div class="wb-head"><div><h2>备份核查</h2><div class="sub">统计资料备份 · 日备 26/48h · 周备 168/240h · 逐项核实处置并留痕（口径同运维值班台）</div></div><span class="wb-demo">合成演示数据</span></div>
+<div class="wb-grid wb-c4" id="repKpis"></div>
+<div class="wb-chips" id="repChips" role="group" aria-label="备份核查筛选" style="margin-top:12px">
+<button type="button" class="wb-chip" data-f="all" aria-pressed="true">全部</button>
+<button type="button" class="wb-chip" data-f="blocker" aria-pressed="false">阻断</button>
+<button type="button" class="wb-chip" data-f="warning" aria-pressed="false">警告</button>
+<button type="button" class="wb-chip" data-f="open" aria-pressed="false">待核实</button>
+<button type="button" class="wb-chip" data-f="done" aria-pressed="false">已核实</button>
+</div>
+<div class="wb-card"><div id="repList"></div></div>
+</section>
+
+<section class="wb-view" id="v-tasks" aria-label="任务待办">
+<div class="wb-head"><div><h2>任务待办</h2><div class="sub">管理层日常事务 · 点完成即联动今日总览</div></div><button type="button" class="wb-btn sm" id="taskAddBtn">+ 新任务</button></div>
+<div id="taskForm" class="wb-card" style="display:none;margin-bottom:12px">
+<h3>新建任务</h3>
+<div class="wb-grid" style="grid-template-columns:2fr 1fr 1fr;gap:8px">
+<input class="wb-input" id="tfTitle" type="text" placeholder="任务标题（必填）" aria-label="任务标题">
+<input class="wb-input" id="tfOwner" type="text" placeholder="负责人" aria-label="负责人">
+<input class="wb-input" id="tfDue" type="date" aria-label="截止日期" value="2026-11-18">
+</div>
+<div id="tfErr" style="color:var(--red);font-size:12px;margin-top:6px;display:none">请填写任务标题。</div>
+<div style="margin-top:10px;display:flex;gap:8px"><button type="button" class="wb-btn sm" id="tfSave">保存</button><button type="button" class="wb-btn ghost sm" id="tfCancel">取消</button></div>
+</div>
+<div class="wb-chips" id="taskChips" role="group" aria-label="任务筛选">
+<button type="button" class="wb-chip" data-f="all" aria-pressed="true">全部</button>
+<button type="button" class="wb-chip" data-f="todo" aria-pressed="false">进行中</button>
+<button type="button" class="wb-chip" data-f="done" aria-pressed="false">已完成</button>
+</div>
+<div class="wb-card"><div id="taskList"></div></div>
+</section><section class="wb-view" id="v-sched" aria-label="日程会议">
+<div class="wb-head"><div><h2>日程会议</h2><div class="sub">今天与本周 · 会议行动项可直接转入待办</div></div><span class="wb-demo">合成演示数据</span></div>
+<div class="wb-grid wb-c2">
+<div class="wb-card"><h3>今日日程（11-18）</h3><div id="schedToday"></div></div>
+<div class="wb-card"><h3>本周后续</h3><div id="schedWeek"></div></div>
+</div>
+<div class="wb-card" style="margin-top:12px"><h3>上次会议行动项（11-16 信息化例会）</h3><div id="schedActions"></div></div>
+</section>
+
+<section class="wb-view" id="v-docs" aria-label="文档报告">
+<div class="wb-head"><div><h2>文档报告</h2><div class="sub">交接班 · 核查通报 · 汇报大纲，一键从当前数据生成</div></div></div>
+<div class="wb-grid wb-c2">
+<div class="wb-card">
+<h3>可生成的报告</h3>
+<div class="wb-row"><div class="grow"><div class="t">今日值班交接班</div><div class="d">汇总阻断/警告/备份状态，Markdown 格式</div></div><button type="button" class="wb-btn sm" data-gen="handover">生成</button></div>
+<div class="wb-row"><div class="grow"><div class="t">备份核查处置通报</div><div class="d">备份时效状态、待核实清单与处置记录</div></div><button type="button" class="wb-btn sm" data-gen="repdoc">生成</button></div>
+<div class="wb-row"><div class="grow"><div class="t">周工作汇报要点</div><div class="d">任务完成情况 + 下周计划草稿</div></div><button type="button" class="wb-btn sm" data-gen="weekly">生成</button></div>
+</div>
+<div class="wb-card"><h3>预览 <button type="button" class="wb-link" id="docCopy" style="float:right">复制全文</button></h3><pre id="docOut" style="white-space:pre-wrap;font:12px/1.7 ui-monospace,Consolas,monospace;background:var(--bg);border-radius:9px;padding:12px;max-height:420px;overflow:auto;margin:0">点左侧「生成」，报告内容全部来自工作台当前数据，不编造数字。</pre></div>
+</div>
+</section>
+
+<section class="wb-view" id="v-ai" aria-label="小浣熊助手">
+<div class="wb-head"><div><h2>小浣熊助手</h2><div class="sub">用一句话跨模块查数据、要结论 · 每个回答都标注调用了哪些工具</div></div><span class="wb-demo">本地规则演示 · 未接大模型</span></div>
+<div class="wb-card" style="display:flex;flex-direction:column;height:480px">
+<div id="aiLog" style="flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px"></div>
+<div class="wb-chips" style="margin:10px 0 8px" id="aiChips">
+<button type="button" class="wb-chip" data-q="今天先干什么">今天先干什么</button>
+<button type="button" class="wb-chip" data-q="哪些备份超时">哪些备份超时</button>
+<button type="button" class="wb-chip" data-q="备份核查进度">备份核查进度</button>
+<button type="button" class="wb-chip" data-q="帮我写交接班">帮我写交接班</button>
+</div>
+<div style="display:flex;gap:8px"><input class="wb-input" id="aiIn" type="text" placeholder="问点什么，比如：srv-app-01 上有什么服务" aria-label="向助手提问"><button type="button" class="wb-btn" id="aiSend">发送</button></div>
+</div>
+</section>
+
+<div id="wb-toast" role="status"></div>
+</div>
+</div><script>
+(function(){
+"use strict";
+var root=document.getElementById('wb-root');
+if(!root)return;
+var $=function(id){return document.getElementById(id);};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+var NOW=new Date('2026-11-18T09:00:00+08:00');
+
+/* ===== 单一数据模型（合成演示数据，运维口径与 ops_center 一致）===== */
+var M={
+alerts:[
+{id:'a-001',host:'srv-db-01',service:'db-stat',sev:'critical',title:'磁盘使用率 92%',msg:'/data 使用率 92%，剩余 38GB；已连续 2 小时超过 90%',time:'2026-11-16T21:40:12'},
+{id:'a-002',host:'srv-app-01',service:'svc-report',sev:'critical',title:'健康检查 502',msg:'health 连续 5 次返回 502',time:'2026-11-16T21:42:03'},
+{id:'a-003',host:'srv-app-01',service:'svc-report',sev:'warning',title:'健康检查 502',msg:'同一服务重复告警：502 已持续 90 秒',time:'2026-11-16T21:43:30'},
+{id:'a-004',host:'srv-app-01',service:'svc-etl',sev:'warning',title:'抽取任务耗时超过阈值',msg:'日终抽取 21:00 启动，已运行 45 分钟（阈值 30）',time:'2026-11-16T21:45:00'},
+{id:'a-005',host:'srv-web-01',service:'svc-portal',sev:'warning',title:'证书将在 7 天内到期',msg:'统计门户 TLS 证书 expires=2026-11-23',time:'2026-11-16T21:47:20'},
+{id:'a-006',host:'srv-file-01',service:'srv-file-01',sev:'info',title:'文件服务器 CPU 85%',msg:'持续 10 分钟高于 80%，未影响服务',time:'2026-11-16T21:49:10'}],
+backups:[
+{id:'backup-db',name:'统计业务库全量备份',host:'srv-db-01',schedule:'每日 02:00',last:'2026-11-13T02:12:00',weekly:false},
+{id:'backup-file',name:'文件服务器增量备份',host:'srv-file-01',schedule:'每日 03:00',last:'2026-11-16T02:05:00',weekly:false},
+{id:'backup-app',name:'应用配置周备份',host:'srv-app-01',schedule:'每周日 04:00',last:'2026-11-08T04:20:00',weekly:true},
+{id:'backup-oa',name:'办公系统数据库备份',host:'srv-oa-01',schedule:'每日 01:30',last:'',weekly:false}],
+assets:[
+{id:'srv-app-01',name:'统计业务应用服务器',type:'server',ip:'10.20.1.11',owner:'信息中心',env:'生产'},
+{id:'srv-db-01',name:'统计业务数据库服务器',type:'server',ip:'10.20.1.21',owner:'信息中心',env:'生产'},
+{id:'srv-web-01',name:'统计门户 Web 服务器',type:'server',ip:'10.20.1.31',owner:'信息中心',env:'生产'},
+{id:'srv-backup-01',name:'备份服务器',type:'server',ip:'10.20.1.41',owner:'信息中心',env:'生产'},
+{id:'srv-file-01',name:'文件与附件服务器',type:'server',ip:'10.20.1.51',owner:'',env:'生产'},
+{id:'svc-report',name:'联网直报服务',type:'service',ip:'10.20.1.11',host:'srv-app-01',owner:'业务一处',env:'生产'},
+{id:'svc-portal',name:'统计门户',type:'service',ip:'10.20.1.31',host:'srv-web-01',owner:'信息中心',env:'生产'},
+{id:'svc-etl',name:'数据抽取任务',type:'service',ip:'10.20.1.11',host:'srv-app-01',owner:'信息中心',env:'生产'},
+{id:'db-stat',name:'统计业务数据库',type:'database',ip:'10.20.1.21',host:'srv-db-01',owner:'信息中心',env:'生产'},
+{id:'cert-portal',name:'统计门户 TLS 证书',type:'certificate',host:'srv-web-01',expires:'2026-11-23',owner:'信息中心',env:'生产'},
+{id:'cert-api',name:'数据交换 API 证书',type:'certificate',host:'srv-app-01',expires:'2027-03-01',owner:'信息中心',env:'生产'},
+{id:'license-report',name:'报表软件授权',type:'license',expires:'2026-12-31',owner:'信息中心',env:'生产'},
+{id:'backup-db',name:'统计业务库全量备份',type:'backup',host:'srv-db-01',owner:'信息中心',env:'生产'},
+{id:'backup-file',name:'文件服务器增量备份',type:'backup',host:'srv-file-01',owner:'信息中心',env:'生产'},
+{id:'backup-app',name:'应用配置周备份',type:'backup',host:'srv-app-01',owner:'信息中心',env:'生产'},
+{id:'backup-oa',name:'办公系统数据库备份',type:'backup',host:'srv-oa-01',owner:'',env:'生产'}],
+backupChecks:[
+{id:'backup-db',verified:false,note:''},
+{id:'backup-file',verified:false,note:''},
+{id:'backup-app',verified:false,note:''},
+{id:'backup-oa',verified:false,note:''}],
+tasks:[
+{id:'t-01',title:'向市局报送 10 月统计快报',owner:'综合科',due:'2026-11-18',done:false},
+{id:'t-02',title:'跟进统计门户证书更新（11-23 到期）',owner:'信息中心',due:'2026-11-20',done:false},
+{id:'t-03',title:'备份核查处置周报',owner:'本人',due:'2026-11-20',done:false},
+{id:'t-04',title:'审定信息化例会纪要',owner:'本人',due:'2026-11-18',done:false},
+{id:'t-05',title:'备份恢复演练方案评审',owner:'信息中心',due:'2026-11-25',done:false},
+{id:'t-06',title:'提交等保自查材料',owner:'信息中心',due:'2026-11-14',done:true}],
+meetings:[
+{start:'09:30',end:'10:00',title:'备份异常处置碰头会（信息中心）',day:'today'},
+{start:'14:00',end:'15:00',title:'信息中心备份整改专题会',day:'today'},
+{start:'10:00',end:'11:30',title:'市局年报布置视频会',day:'11-19 周四'},
+{start:'15:00',end:'16:00',title:'等保整改复查',day:'11-20 周五'}],
+actions:[
+{id:'m-01',title:'补齐 srv-file-01 与 backup-oa 负责人',from:'11-16 信息化例会',moved:false},
+{id:'m-02',title:'本周内完成一次备份恢复抽验',from:'11-16 信息化例会',moved:false}],
+ack:{},opsFilter:'all',repFilter:'all',taskFilter:'all'
+};/* ===== 规则计算（与 ops_center 同口径）===== */
+function mergedAlerts(){
+var map={};
+M.alerts.forEach(function(a){
+var k=a.host+'|'+a.service+'|'+a.title;
+if(!map[k])map[k]={host:a.host,service:a.service,title:a.title,sev:a.sev,count:0,first:a.time,last:a.time,msg:a.msg};
+var g=map[k];g.count++;
+if(a.time<g.first)g.first=a.time;
+if(a.time>g.last){g.last=a.time;g.msg=a.msg;}
+var rank={critical:3,warning:2,info:1};
+if(rank[a.sev]>rank[g.sev])g.sev=a.sev;
+});
+return Object.keys(map).map(function(k){return map[k];});
+}
+function backupState(b){
+if(!b.last)return{st:'blocker',hours:null,label:'无成功记录'};
+var h=(NOW-new Date(b.last+'+08:00'))/36e5;
+var warn=b.weekly?168:26,block=b.weekly?240:48;
+var st=h>=block?'blocker':(h>=warn?'warning':'ok');
+return{st:st,hours:h,label:h.toFixed(1)+' 小时未成功'};
+}
+function findings(){
+var out=[];
+mergedAlerts().forEach(function(a,i){
+var sev=a.sev==='critical'?'blocker':(a.sev==='warning'?'warning':'info');
+out.push({id:'AL-'+(i+1),sev:sev,src:'告警',title:a.title,detail:a.host+' / '+a.service+' · '+a.msg+(a.count>1?'（合并 '+a.count+' 条）':''),sug:sev==='blocker'?'立即确认服务状态并处置':'当班跟进'});
+});
+M.backups.forEach(function(b){
+var s=backupState(b);
+if(s.st!=='ok')out.push({id:'BK-'+b.id,sev:s.st,src:'备份',title:b.name+'：'+s.label,detail:b.host+' · 计划 '+b.schedule+(s.hours!=null?' · 阈值 '+(b.weekly?'168/240h':'26/48h'):''),sug:'核验任务日志与可恢复性'});
+});
+var cert=M.assets.filter(function(a){return (a.type==='certificate'||a.type==='license')&&a.expires;});
+cert.forEach(function(c){
+var days=(new Date(c.expires+'T00:00:00+08:00')-NOW)/864e5;
+var label=c.type==='certificate'?'证书':'授权';
+var sev=null,title='';
+if(days<0){sev='blocker';title=label+'已过期';}
+else if(days<=7){sev='blocker';title=label+'将在 7 天内到期';}
+else if(days<=30){sev='warning';title=label+'将在 30 天内到期';}
+if(sev)out.push({id:'AS-'+c.id,sev:sev,src:'资产',title:title,detail:c.name+' 到期时间 '+c.expires+'，剩余 '+days.toFixed(1)+' 天',sug:sev==='blocker'?'立即办理续期或更换':'安排续期'});
+});
+M.assets.forEach(function(a){
+if(a.env==='生产'&&!a.owner)out.push({id:'OW-'+a.id,sev:'warning',src:'资产',title:a.name+' 无负责人',detail:'生产资产责任缺失',sug:'补齐负责人'});
+});
+var backupHosts={};
+M.backups.forEach(function(b){backupHosts[b.host]=true;});
+M.assets.forEach(function(a){
+if(a.type==='service'&&a.env==='生产'&&a.host&&!backupHosts[a.host])
+out.push({id:'NB-'+a.id,sev:'warning',src:'资产',title:a.name+' 缺少对应备份',detail:'生产服务位于 '+a.host+'，无匹配备份资产',sug:'补齐备份覆盖'});
+});
+var hostCount={};
+M.assets.forEach(function(a){if(a.type==='service'&&a.host)hostCount[a.host]=(hostCount[a.host]||0)+1;});
+Object.keys(hostCount).forEach(function(h){
+if(hostCount[h]>=2)out.push({id:'SP-'+h,sev:'info',src:'资产',title:h+' 单机承载 '+hostCount[h]+' 个生产服务',detail:'集中承载风险',sug:'评估拆分或容灾'});
+});
+var order={blocker:0,warning:1,info:2};
+/* 跨源去重：同标题不同来源合并（与 ops_center._dedupe_cross_source 一致） */
+var seen={},ded=[];
+out.forEach(function(f){
+if(seen[f.title]&&seen[f.title].src!==f.src){
+var ex=seen[f.title];
+if(order[f.sev]<order[ex.sev])ex.sev=f.sev;
+return;
+}
+seen[f.title]=f;ded.push(f);
+});
+out=ded;
+out.sort(function(x,y){return order[x.sev]-order[y.sev];});
+return out;
+}
+function counts(){
+var f=findings(),c={blocker:0,warning:0,info:0,open:0};
+f.forEach(function(x){c[x.sev]++;if(!M.ack[x.id])c.open++;});
+return c;
+}
+function backupRows(){
+return M.backupChecks.map(function(c){
+var b=M.backups.filter(function(x){return x.id===c.id;})[0];
+var s=backupState(b);
+return{id:c.id,b:b,s:s,verified:c.verified,note:c.note};
+});
+}
+function repCounts(){
+var c={blocker:0,warning:0,ok:0,open:0,done:0,total:M.backupChecks.length};
+backupRows().forEach(function(r){
+c[r.s.st]++;
+if(r.verified)c.done++;
+else if(r.s.st!=='ok')c.open++;
+});
+return c;
+}
+function todayTasks(){return M.tasks.filter(function(t){return !t.done&&t.due<='2026-11-18';});}
+
+/* ===== 通用渲染 ===== */
+var SEV={blocker:['b-red','阻断'],warning:['b-amb','警告'],info:['b-blu','提示'],ok:['b-grn','正常']};
+function toast(msg){var t=$('wb-toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._h);toast._h=setTimeout(function(){t.classList.remove('show');},2200);}
+function row(html){return '<div class="wb-row">'+html+'</div>';}
+
+function renderHome(){
+var c=counts(),rc=repCounts();
+$('kBlock').textContent=c.blocker;
+$('kRep').textContent=rc.open;
+$('kTask').textContent=todayTasks().length;
+$('kMeet').textContent=M.meetings.filter(function(m){return m.day==='today';}).length;
+var urgent=[];
+findings().filter(function(f){return f.sev==='blocker'&&!M.ack[f.id];}).slice(0,3).forEach(function(f){
+urgent.push(row('<span class="wb-badge b-red">值班</span><div class="grow"><div class="t">'+esc(f.title)+'</div><div class="d">'+esc(f.detail)+'</div></div><button type="button" class="wb-link" data-go="ops">处理</button>'));
+});
+backupRows().filter(function(r){return !r.verified&&r.s.st!=='ok';}).slice(0,2).forEach(function(r){
+urgent.push(row('<span class="wb-badge b-amb">备份</span><div class="grow"><div class="t">'+esc(r.b.name)+'：'+esc(r.s.label)+'</div><div class="d">'+esc(r.b.host)+' · 计划 '+esc(r.b.schedule)+' · 待核实处置</div></div><button type="button" class="wb-link" data-go="report">核查</button>'));
+});
+todayTasks().slice(0,2).forEach(function(t){
+urgent.push(row('<span class="wb-badge b-blu">待办</span><div class="grow"><div class="t">'+esc(t.title)+'</div><div class="d">'+esc(t.owner)+' · 截止 '+esc(t.due)+'</div></div><button type="button" class="wb-link" data-go="tasks">查看</button>'));
+});
+$('homeUrgent').innerHTML=urgent.join('')||'<div class="wb-empty">今天没有紧急事项，保持节奏。</div>';
+$('homeSched').innerHTML=M.meetings.filter(function(m){return m.day==='today';}).map(function(m){
+return row('<span class="wb-badge b-mut">'+esc(m.start)+'</span><div class="grow"><div class="t">'+esc(m.title)+'</div><div class="d">'+esc(m.start)+'–'+esc(m.end)+'</div></div>');
+}).join('')||'<div class="wb-empty">今日无会议。</div>';
+var no=$('navOps');no.textContent=c.blocker;no.classList.toggle('zero',c.blocker===0);
+var nr=$('navRep');nr.textContent=rc.open;nr.classList.toggle('zero',rc.open===0);
+var nt=$('navTask');nt.textContent=todayTasks().length;nt.classList.toggle('zero',todayTasks().length===0);
+}function renderOps(){
+var f=findings();
+var list=f.filter(function(x){
+if(M.opsFilter==='all')return true;
+if(M.opsFilter==='open')return !M.ack[x.id];
+return x.sev===M.opsFilter;
+});
+$('opsList').innerHTML=list.map(function(x){
+var s=SEV[x.sev],acked=!!M.ack[x.id];
+return '<div class="wb-row'+(acked?' wb-done':'')+'"><span class="wb-badge '+s[0]+'">'+s[1]+'</span><span class="wb-badge b-mut">'+esc(x.src)+'</span><div class="grow"><div class="t">'+esc(x.title)+'</div><div class="d">'+esc(x.detail)+' · 建议：'+esc(x.sug)+'</div></div><button type="button" class="wb-btn ghost sm" data-ack="'+esc(x.id)+'"'+(acked?' disabled':'')+'>'+(acked?'已确认':'确认')+'</button></div>';
+}).join('')||'<div class="wb-empty">该筛选下没有发现。<button type="button" class="wb-link" data-clearops>清除筛选</button></div>';
+$('opsBackup').innerHTML=M.backups.map(function(b){
+var s=backupState(b),badge=SEV[s.st==='ok'?'ok':s.st];
+return row('<span class="wb-badge '+badge[0]+'">'+(s.st==='ok'?'正常':badge[1])+'</span><div class="grow"><div class="t">'+esc(b.name)+'</div><div class="d">'+esc(b.host)+' · '+esc(b.schedule)+' · '+(b.last?('最近成功 '+esc(b.last.replace('T',' '))+'（'+s.label+'）'):'无成功记录')+'</div></div>');
+}).join('');
+renderAssets($('opsSearch').value);
+}
+function renderAssets(q){
+q=(q||'').trim().toLowerCase();
+var rows=M.assets.filter(function(a){
+if(!q)return true;
+return ['name','id','ip','host','owner','type'].some(function(k){return String(a[k]||'').toLowerCase().indexOf(q)>=0;});
+});
+$('opsAssets').innerHTML=rows.map(function(a){
+return row('<span class="wb-badge b-mut">'+esc(a.type)+'</span><div class="grow"><div class="t">'+esc(a.name)+'</div><div class="d">'+esc(a.ip||a.host||'')+(a.owner?' · '+esc(a.owner):' · <span style="color:var(--red)">无负责人</span>')+'</div></div>');
+}).join('')||'<div class="wb-empty">没有匹配的资产。<button type="button" class="wb-link" id="clearAsset">清空搜索</button></div>';
+var ca=document.getElementById('clearAsset');
+if(ca)ca.onclick=function(){$('opsSearch').value='';renderAssets('');$('opsSearch').focus();};
+}
+function renderReport(){
+var rc=repCounts();
+$('repKpis').innerHTML=
+'<div class="wb-card wb-kpi"><b>'+rc.total+'</b><span>备份任务</span></div>'+
+'<div class="wb-card wb-kpi hot"><b>'+rc.blocker+'</b><span>时效阻断</span></div>'+
+'<div class="wb-card wb-kpi"><b>'+rc.open+'</b><span>待核实处置</span></div>'+
+'<div class="wb-card wb-kpi"><b>'+rc.done+'</b><span>已核实</span></div>';
+var list=backupRows().filter(function(r){
+if(M.repFilter==='all')return true;
+if(M.repFilter==='open')return !r.verified&&r.s.st!=='ok';
+if(M.repFilter==='done')return r.verified;
+return r.s.st===M.repFilter;
+});
+$('repList').innerHTML=list.map(function(r){
+var st=r.s.st,badge=st==='ok'?['b-grn','正常']:SEV[st];
+var detail=r.b.host+' · 计划 '+r.b.schedule+' · '+(r.b.last?('最近成功 '+r.b.last.replace('T',' ')+'（'+r.s.label+'，阈值 '+(r.b.weekly?'168/240h':'26/48h')+'）'):'无成功记录，需立即补做可验证备份');
+var act=r.verified?'<span class="wb-badge b-grn">'+esc(r.note||'已核实')+'</span>':(st==='ok'?'<span class="wb-badge b-mut">无需处置</span>':'<button type="button" class="wb-btn ghost sm" data-rep="'+esc(r.id)+'">标记已核实</button>');
+return '<div class="wb-row'+(r.verified?' wb-done':'')+'"><span class="wb-badge '+badge[0]+'">'+badge[1]+'</span><div class="grow"><div class="t">'+esc(r.b.name)+'</div><div class="d">'+esc(detail)+'</div></div>'+act+'</div>';
+}).join('')||'<div class="wb-empty">该筛选下没有备份任务。<button type="button" class="wb-link" data-clearrep>清除筛选</button></div>';
+}
+function renderTasks(){
+var list=M.tasks.filter(function(t){
+if(M.taskFilter==='all')return true;
+return M.taskFilter==='done'?t.done:!t.done;
+});
+$('taskList').innerHTML=list.map(function(t){
+var overdue=!t.done&&t.due<'2026-11-18';
+return '<div class="wb-row'+(t.done?' wb-done':'')+'"><input type="checkbox" data-task="'+esc(t.id)+'"'+(t.done?' checked':'')+' aria-label="完成 '+esc(t.title)+'" style="width:16px;height:16px;accent-color:var(--ac)"><div class="grow"><div class="t">'+esc(t.title)+'</div><div class="d">'+esc(t.owner)+' · 截止 '+esc(t.due)+(overdue?' <span style="color:var(--red);font-weight:600">已逾期</span>':'')+'</div></div>'+(t.done?'<span class="wb-badge b-grn">已完成</span>':(overdue?'<span class="wb-badge b-red">逾期</span>':'<span class="wb-badge b-blu">进行中</span>'))+'</div>';
+}).join('')||'<div class="wb-empty">该筛选下没有任务。<button type="button" class="wb-link" data-cleartask>清除筛选</button></div>';
+}
+function renderSched(){
+$('schedToday').innerHTML=M.meetings.filter(function(m){return m.day==='today';}).map(function(m){
+return row('<span class="wb-badge b-blu">'+esc(m.start)+'–'+esc(m.end)+'</span><div class="grow"><div class="t">'+esc(m.title)+'</div></div>');
+}).join('');
+$('schedWeek').innerHTML=M.meetings.filter(function(m){return m.day!=='today';}).map(function(m){
+return row('<span class="wb-badge b-mut">'+esc(m.day)+'</span><div class="grow"><div class="t">'+esc(m.title)+'</div><div class="d">'+esc(m.start)+'–'+esc(m.end)+'</div></div>');
+}).join('');
+$('schedActions').innerHTML=M.actions.map(function(a){
+return '<div class="wb-row"><div class="grow"><div class="t">'+esc(a.title)+'</div><div class="d">来源：'+esc(a.from)+'</div></div>'+(a.moved?'<span class="wb-badge b-grn">已转入待办</span>':'<button type="button" class="wb-btn ghost sm" data-move="'+esc(a.id)+'">转入待办</button>')+'</div>';
+}).join('');
+}/* ===== 报告生成（全部数字来自模型）===== */
+function genDoc(kind){
+var c=counts(),rc=repCounts(),lines=[];
+if(kind==='handover'){
+lines.push('# 值班交接班 · 2026-11-18','','## 一、总体');
+lines.push('- 资产 '+M.assets.length+' 项；原始告警 '+M.alerts.length+' 条，合并后 '+mergedAlerts().length+' 条。');
+lines.push('- 发现：阻断 '+c.blocker+'、警告 '+c.warning+'、提示 '+c.info+'；未确认 '+c.open+' 项。');
+lines.push('','## 二、必须处理');
+findings().filter(function(f){return f.sev==='blocker';}).forEach(function(f){lines.push('- ['+f.id+'] '+f.title+'：'+f.detail);});
+lines.push('','## 三、待观察');
+findings().filter(function(f){return f.sev==='warning';}).forEach(function(f){lines.push('- ['+f.id+'] '+f.title);});
+lines.push('','## 四、交接备注','- 备份异常未恢复前，明早复查备份任务和恢复演练。','- 证书到期项按负责人跟进（统计门户证书 2026-11-23 到期）。');
+}else if(kind==='repdoc'){
+lines.push('# 备份核查处置通报 · 2026-11-18','','备份任务共 '+rc.total+' 项：时效阻断 '+rc.blocker+'、警告 '+rc.warning+'、正常 '+rc.ok+'；待核实处置 '+rc.open+' 项、已核实 '+rc.done+' 项。','','## 待核实清单（需当班处置）');
+backupRows().filter(function(r){return !r.verified&&r.s.st!=='ok';}).forEach(function(r){lines.push('- '+r.b.name+'（'+r.b.host+'）：'+r.s.label+'，计划 '+r.b.schedule);});
+lines.push('','## 已核实处置记录');
+var vrows=backupRows().filter(function(r){return r.verified;});
+if(!vrows.length)lines.push('- （暂无）');
+vrows.forEach(function(r){lines.push('- '+r.b.name+'：'+(r.note||'已核实'));});
+lines.push('','要求：备份异常未恢复前，逐项核验任务日志并补做可验证备份；完成后抽验恢复。');
+}else{
+var done=M.tasks.filter(function(t){return t.done;}).length;
+lines.push('# 周工作汇报要点 · 2026-11-18','','## 本周完成');
+M.tasks.filter(function(t){return t.done;}).forEach(function(t){lines.push('- '+t.title+'（'+t.owner+'）');});
+if(!done)lines.push('- （暂无已完成任务）');
+lines.push('','## 进行中（'+(M.tasks.length-done)+' 项）');
+M.tasks.filter(function(t){return !t.done;}).forEach(function(t){lines.push('- '+t.title+' · 截止 '+t.due);});
+lines.push('','## 风险与关注','- 值班阻断 '+c.blocker+' 项；备份待核实处置 '+rc.open+' 项，详见对应模块。');
+}
+return lines.join('\n');
+}
+
+/* ===== 助手（本地规则版：工具轨迹 + 事实回答）===== */
+function aiAnswer(q){
+var tools=[],ans=[];
+var lower=q.toLowerCase();
+var q2=lower.replace(/\s+/g,'');
+if(/先干|优先|今天.*什么|安排/.test(q)){
+tools.push('get_overview','list_findings(blocker)','get_backup_checks(open)','list_tasks(today)');
+var c=counts(),rc=repCounts();
+ans.push('今天的优先级建议：');
+ans.push('1. 值班阻断 '+c.blocker+' 项——'+findings().filter(function(f){return f.sev==='blocker';}).map(function(f){return f.title;}).join('；')+'。');
+ans.push('2. 备份待核实处置 '+rc.open+' 项，需逐项核验日志并补做可验证备份。');
+ans.push('3. 今日截止待办 '+todayTasks().length+' 项：'+todayTasks().map(function(t){return t.title;}).join('；')+'。');
+}else if(/核查|进度|处置/.test(q)){
+tools.push('get_backup_checks');
+var rc=repCounts();
+ans.push('备份任务 '+rc.total+' 项：时效阻断 '+rc.blocker+'、警告 '+rc.warning+'、正常 '+rc.ok+'；待核实处置 '+rc.open+'、已核实 '+rc.done+'。');
+var opens=backupRows().filter(function(r){return !r.verified&&r.s.st!=='ok';});
+if(opens.length){ans.push('待核实清单：');opens.forEach(function(r){ans.push('· '+r.b.name+'（'+r.b.host+'）：'+r.s.label+'，计划 '+r.b.schedule);});}
+}else if(/备份/.test(q)){
+tools.push('check_backup_status');
+var bad=M.backups.map(function(b){return{b:b,s:backupState(b)};}).filter(function(x){return x.s.st!=='ok';});
+if(!bad.length)ans.push('当前所有备份都在时效内。');
+else{ans.push('备份异常 '+bad.length+' 项：');bad.forEach(function(x){ans.push('· '+x.b.name+'（'+x.b.host+'）：'+x.s.label+'，计划 '+x.b.schedule+'，级别 '+(x.s.st==='blocker'?'阻断':'警告')+'。');});}
+}else if(/交接班|交接/.test(q)){
+tools.push('get_handover');
+ans.push('已按当前数据生成交接班，全文在「文档报告」页可复制。要点：');
+var c=counts();
+ans.push('阻断 '+c.blocker+'、警告 '+c.warning+'、提示 '+c.info+'；未确认 '+c.open+' 项。');
+$('docOut').textContent=genDoc('handover');
+}else if(/证书|到期/.test(q)){
+tools.push('search_assets(certificate)');
+M.assets.filter(function(a){return a.type==='certificate'||a.type==='license';}).forEach(function(a){
+var days=Math.round((new Date(a.expires+'T00:00:00+08:00')-NOW)/864e5);
+ans.push('· '+a.name+'：'+a.expires+' 到期（还有 '+days+' 天）'+(days<=7?'，需立即更新':'')+'。');
+});
+}else{
+var hit=M.assets.filter(function(a){return ['name','id','ip','host'].some(function(k){var v=String(a[k]||'').toLowerCase();return v&&(v.indexOf(q2)>=0||q2.indexOf(v)>=0)&&Math.min(v.length,q2.length)>2;});});
+if(hit.length){
+tools.push('search_assets("'+q.slice(0,20)+'")');
+ans.push('匹配到 '+hit.length+' 项资产：');
+hit.forEach(function(a){ans.push('· '+a.name+'（'+a.id+'）'+(a.ip?' IP '+a.ip:'')+(a.host?' 部署于 '+a.host:'')+(a.owner?' 负责人 '+a.owner:' 负责人缺失'));});
+var svc=M.assets.filter(function(a){return (a.type==='service'||a.type==='database')&&hit.some(function(h){return h.id===a.host;});});
+if(svc.length>=2)ans.push('注意：该主机承载 '+svc.length+' 个生产服务（'+svc.map(function(s){return s.name;}).join('、')+'），存在单机集中风险。');
+}else{
+tools.push('get_overview');
+ans.push('这个问题我还答不了（本地演示版只覆盖：今日优先级 / 备份超时 / 备份核查进度 / 证书到期 / 资产查询 / 交接班）。接入大模型后可按《Agent 工作台方案》扩展更多工具。');
+}
+}
+return{tools:tools,text:ans.join('\n')};
+}
+function aiPush(role,text,tools){
+var log=$('aiLog');
+var div=document.createElement('div');
+div.style.cssText=role==='user'?'align-self:flex-end;background:var(--ac);color:#fff;border-radius:12px 12px 2px 12px;padding:8px 12px;max-width:85%;font-size:13px;white-space:pre-wrap':'align-self:flex-start;background:var(--bg);border:1px solid var(--bd);border-radius:12px 12px 12px 2px;padding:8px 12px;max-width:92%;font-size:13px;white-space:pre-wrap';
+if(role==='bot'&&tools&&tools.length){
+var tr=document.createElement('div');
+tr.style.cssText='font-size:11px;color:var(--mu);margin-bottom:6px;font-family:ui-monospace,Consolas,monospace';
+tr.textContent='⚙ 调用工具：'+tools.join(' → ');
+div.appendChild(tr);
+}
+var body=document.createElement('div');body.textContent=text;div.appendChild(body);
+log.appendChild(div);log.scrollTop=log.scrollHeight;
+}
+function ask(q){
+if(!q.trim())return;
+aiPush('user',q);
+var r=aiAnswer(q.trim());
+aiPush('bot',r.text,r.tools);
+}/* ===== 视图切换与事件（委托，不重建控件）===== */
+function show(v){
+root.querySelectorAll('.wb-view').forEach(function(s){s.classList.toggle('on',s.id==='v-'+v);});
+root.querySelectorAll('.wb-nav').forEach(function(b){b.classList.toggle('on',b.dataset.v===v);});
+}
+function renderAll(){renderHome();renderOps();renderReport();renderTasks();renderSched();}
+function chipGroup(elId,key,render){
+$(elId).addEventListener('click',function(e){
+var b=e.target.closest('.wb-chip');if(!b)return;
+M[key]=b.dataset.f;
+this.querySelectorAll('.wb-chip').forEach(function(c){c.setAttribute('aria-pressed',c===b?'true':'false');});
+render();
+});
+}
+chipGroup('opsChips','opsFilter',renderOps);
+chipGroup('repChips','repFilter',renderReport);
+chipGroup('taskChips','taskFilter',renderTasks);
+
+root.addEventListener('click',function(e){
+var t=e.target;
+var nav=t.closest('.wb-nav');if(nav){show(nav.dataset.v);return;}
+var go=t.closest('[data-go]');if(go){show(go.dataset.go);return;}
+var ack=t.closest('[data-ack]');
+if(ack&&!ack.disabled){
+M.ack[ack.dataset.ack]=new Date().toISOString();
+ack.disabled=true;ack.textContent='已确认';
+ack.closest('.wb-row').classList.add('wb-done');
+renderHome();toast('已确认并留痕（演示内存审计）');
+if(M.opsFilter==='open')renderOps();
+return;
+}
+var rep=t.closest('[data-rep]');
+if(rep){
+var r=M.backupChecks.filter(function(x){return x.id===rep.dataset.rep;})[0];
+if(r&&!r.verified){r.verified=true;r.note='11-18 人工核实处置';renderReport();renderHome();toast('已标记核实并留痕（演示内存审计）');}
+return;
+}
+var mv=t.closest('[data-move]');
+if(mv){
+var a=M.actions.filter(function(x){return x.id===mv.dataset.move;})[0];
+if(a&&!a.moved){
+a.moved=true;
+M.tasks.push({id:'t-'+Date.now(),title:a.title,owner:'信息中心',due:'2026-11-20',done:false});
+renderSched();renderTasks();renderHome();toast('已转入任务待办');
+}
+return;
+}
+var gen=t.closest('[data-gen]');
+if(gen){$('docOut').textContent=genDoc(gen.dataset.gen);toast('报告已生成，数字来自当前数据');return;}
+if(t.closest('[data-clearops]')){M.opsFilter='all';syncChips('opsChips','all');renderOps();return;}
+if(t.closest('[data-clearrep]')){M.repFilter='all';syncChips('repChips','all');renderReport();return;}
+if(t.closest('[data-cleartask]')){M.taskFilter='all';syncChips('taskChips','all');renderTasks();return;}
+var chip=t.closest('#aiChips .wb-chip');
+if(chip){ask(chip.dataset.q);return;}
+});
+function syncChips(id,val){
+$(id).querySelectorAll('.wb-chip').forEach(function(c){c.setAttribute('aria-pressed',c.dataset.f===val?'true':'false');});
+}
+root.addEventListener('change',function(e){
+var cb=e.target.closest('[data-task]');
+if(cb){
+var t=M.tasks.filter(function(x){return x.id===cb.dataset.task;})[0];
+if(t){t.done=cb.checked;renderTasks();renderHome();toast(t.done?'任务完成：'+t.title:'任务重新打开');}
+}
+});
+$('opsSearch').addEventListener('input',function(){renderAssets(this.value);});
+$('taskAddBtn').addEventListener('click',function(){$('taskForm').style.display='block';$('tfTitle').focus();});
+$('tfCancel').addEventListener('click',function(){$('taskForm').style.display='none';$('tfErr').style.display='none';});
+$('tfSave').addEventListener('click',function(){
+var title=$('tfTitle').value.trim();
+if(!title){$('tfErr').style.display='block';$('tfTitle').focus();return;}
+$('tfErr').style.display='none';
+M.tasks.push({id:'t-'+Date.now(),title:title,owner:$('tfOwner').value.trim()||'本人',due:$('tfDue').value||'2026-11-18',done:false});
+$('tfTitle').value='';$('tfOwner').value='';
+$('taskForm').style.display='none';
+if(M.taskFilter==='done'){M.taskFilter='all';syncChips('taskChips','all');}
+renderTasks();renderHome();toast('已保存新任务');
+});
+$('docCopy').addEventListener('click',function(){
+var txt=$('docOut').textContent;
+if(navigator.clipboard&&navigator.clipboard.writeText){
+navigator.clipboard.writeText(txt).then(function(){toast('已复制到剪贴板');},function(){toast('复制受限，请手动选择文本');});
+}else toast('复制受限，请手动选择文本');
+});
+$('aiSend').addEventListener('click',function(){ask($('aiIn').value);$('aiIn').value='';$('aiIn').focus();});
+$('aiIn').addEventListener('keydown',function(e){if(e.key==='Enter'){ask(this.value);this.value='';}});
+
+renderAll();
+aiPush('bot','你好 michael，我是工作台助手。我可以跨模块查值班发现、备份时效、备份核查进度和资产台账，每个回答都会标注调用的工具。试试下面的快捷问题。',['init']);
+})();
+</script>
+</div>

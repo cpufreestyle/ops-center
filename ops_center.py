@@ -552,24 +552,28 @@ def export_demo(force: bool = False) -> list[Path]:
     return written
 
 
-def validate_data() -> bool:
+def validate_data_structured() -> list[dict]:
+    """结构化校验 inbox CSV：返回问题清单（含级别/文件/行号/字段/信息）。
+
+    与 validate_data() 同一套规则，但返回 list[dict] 而非 print，
+    供 Agent 的 check_data_quality 工具使用。CLI 行为不变。
+    """
     required = {
         "assets.csv": {"name", "type", "owner", "env"},
         "backups.csv": {"name", "host", "schedule", "last_success"},
         "alerts.csv": {"time", "host", "service", "severity", "title"},
     }
-    ok = True
+    issues: list[dict] = []
     source = data_source()
     if source == "demo":
-        print("当前没有 inbox CSV，使用内置演示数据。先运行 `python3 ops_center.py export-demo`。")
-        return True
+        return [{"level": "info", "file": "", "row": 0, "field": "",
+                 "message": "当前没有 inbox CSV，使用内置演示数据。先运行 `python3 ops_center.py export-demo`。"}]
     allowed_types = {"server", "service", "database", "certificate", "license", "backup"}
     allowed_severity = {"critical", "warning", "info"}
     for name, fields in required.items():
         path = DATA_DIR / name
         if not path.exists():
-            print(f"[缺失] {name}")
-            ok = False
+            issues.append({"level": "error", "file": name, "row": 0, "field": "", "message": "文件缺失"})
             continue
         with path.open("r", encoding="utf-8-sig", newline="") as handle:
             reader = csv.DictReader(handle)
@@ -577,35 +581,57 @@ def validate_data() -> bool:
             rows = list(reader)
         missing = fields - headers
         if missing:
-            ok = False
-            print(f"[表头缺失] {name}: {', '.join(sorted(missing))}")
+            issues.append({"level": "error", "file": name, "row": 0, "field": ", ".join(sorted(missing)),
+                           "message": "表头缺失"})
         else:
-            print(f"[OK] {name}: {len(rows)} 行")
+            issues.append({"level": "ok", "file": name, "row": 0, "field": "",
+                           "message": f"{len(rows)} 行"})
         for index, row in enumerate(rows, start=2):
             if name == "alerts.csv":
                 if row.get("severity") not in allowed_severity:
-                    ok = False
-                    print(f"[错误] alerts.csv 第 {index} 行 severity={row.get('severity')!r}")
+                    issues.append({"level": "error", "file": name, "row": index, "field": "severity",
+                                   "message": f"severity={row.get('severity')!r} 不合法"})
                 if not parse_dt(row.get("time")):
-                    ok = False
-                    print(f"[错误] alerts.csv 第 {index} 行 time 无法解析：{row.get('time')!r}")
+                    issues.append({"level": "error", "file": name, "row": index, "field": "time",
+                                   "message": f"time 无法解析：{row.get('time')!r}"})
                 for field in ("host", "service", "title"):
                     if not row.get(field):
-                        ok = False
-                        print(f"[错误] alerts.csv 第 {index} 行缺少 {field}")
+                        issues.append({"level": "error", "file": name, "row": index, "field": field,
+                                       "message": f"缺少 {field}"})
             elif name == "backups.csv":
                 if row.get("last_success") and not parse_dt(row.get("last_success")):
-                    ok = False
-                    print(f"[错误] backups.csv 第 {index} 行 last_success 无法解析：{row.get('last_success')!r}")
+                    issues.append({"level": "error", "file": name, "row": index, "field": "last_success",
+                                   "message": f"last_success 无法解析：{row.get('last_success')!r}"})
                 if not row.get("schedule"):
-                    print(f"[警告] backups.csv 第 {index} 行 schedule 为空，按日备阈值处理")
+                    issues.append({"level": "warning", "file": name, "row": index, "field": "schedule",
+                                   "message": "schedule 为空，按日备阈值处理"})
             elif name == "assets.csv":
                 if row.get("type") and row.get("type") not in allowed_types:
-                    ok = False
-                    print(f"[错误] assets.csv 第 {index} 行 type={row.get('type')!r}")
+                    issues.append({"level": "error", "file": name, "row": index, "field": "type",
+                                   "message": f"type={row.get('type')!r} 不合法"})
                 if row.get("expires") and not parse_dt(row.get("expires")):
-                    ok = False
-                    print(f"[错误] assets.csv 第 {index} 行 expires 无法解析：{row.get('expires')!r}")
+                    issues.append({"level": "error", "file": name, "row": index, "field": "expires",
+                                   "message": f"expires 无法解析：{row.get('expires')!r}"})
+    return issues
+
+
+def validate_data() -> bool:
+    """打印版校验（保持原 CLI 行为），内部复用结构化结果。"""
+    issues = validate_data_structured()
+    ok = True
+    if not issues:
+        return True
+    for item in issues:
+        level = item["level"]
+        if level == "ok":
+            print(f"[OK] {item['file']}: {item['message']}")
+        elif level == "info":
+            print(item["message"])
+        else:
+            ok = False
+            loc = f"{item['file']} 第 {item['row']} 行" if item["row"] else item["file"]
+            print(f"[{'错误' if level == 'error' else '警告'}] {loc}"
+                  f"{(' ' + item['field']) if item['field'] else ''}: {item['message']}")
     return ok
 
 
@@ -659,6 +685,28 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, b"not found", "text/plain")
 
     def do_POST(self):
+        if self.path == "/api/chat":
+            length = int(self.headers.get("Content-Length", 0) or 0)
+            raw = self.rfile.read(length).decode("utf-8", errors="ignore") if length else "{}"
+            try:
+                payload = json.loads(raw or "{}")
+            except json.JSONDecodeError:
+                payload = {}
+            message = payload.get("message", "")
+            session_id = payload.get("session_id", "")
+            try:
+                from agent_loop import handle
+                result = handle(message, session_id)
+                self._json({
+                    "answer": result.answer,
+                    "tool_trace": [{"tool": t.tool, "args": t.args, "summary": t.summary, "duration_ms": t.duration_ms} for t in result.tool_trace],
+                    "findings_referenced": result.findings_referenced,
+                    "forbidden": result.forbidden,
+                })
+            except Exception as exc:
+                self._json({"error": f"Agent 处理失败：{exc}"}, status=500)
+            return
+
         if self.path != "/api/ack":
             self._send(404, b"not found", "text/plain")
             return

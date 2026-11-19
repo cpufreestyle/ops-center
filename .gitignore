@@ -18,3 +18,19 @@ docs/xhx/screenshot_*.png
 zonguan/runs/
 zonguan/corpus/*.pdf
 zonguan/*.db
+
+# 临时 QA 截图与测试页（本机调试，不提交）
+qa*.png
+qa_*.py
+wb_qa*.html
+*.tar.gz
+.box-agent-scratch/
+
+# 运行时日志与部署副本
+data/agent_audit.jsonl
+ms-deploy/
+output/
+
+# PPT 构建器内部元数据
+.artifact-delivery.json
+.*.artifact.json

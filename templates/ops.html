@@ -42,6 +42,27 @@ input[type=text]{width:100%;background:#0d1020;border:1px solid var(--line);colo
 pre{white-space:pre-wrap;font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;color:#c9d1e6;background:#0d1020;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:520px;overflow:auto}
 .muted{color:var(--muted);font-size:12px}
 @media(max-width:1000px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+
+/* ---- 小浣熊对话 tab ---- */
+.chat{display:flex;flex-direction:column;gap:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:rgba(124,92,255,.12);border:1px solid rgba(124,92,255,.4);color:#c9bcff;border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer}
+.chip:hover{background:rgba(124,92,255,.22)}
+.chatlog{display:flex;flex-direction:column;gap:14px;max-height:640px;overflow:auto;padding-right:4px}
+.msg{border-radius:12px;padding:10px 13px;white-space:pre-wrap;font-size:13px;line-height:1.65}
+.msg.user{background:rgba(124,92,255,.14);border:1px solid rgba(124,92,255,.35);align-self:flex-end;max-width:85%}
+.msg.bot{background:#0d1020;border:1px solid var(--line);align-self:flex-start;max-width:100%}
+.msg.bot .ans{white-space:pre-wrap}
+.msg.bot .ans .fid{display:inline-block;background:rgba(90,167,255,.16);color:#b7d8ff;border:1px solid rgba(90,167,255,.4);border-radius:6px;padding:0 6px;margin:0 2px;cursor:pointer;font-size:12px}
+.trace{margin-top:9px;border-top:1px dashed var(--line);padding-top:8px}
+.trace summary{cursor:pointer;color:var(--muted);font-size:12px;outline:none}
+.trace .step{color:#9aa3b8;font-size:12px;margin:4px 0;font-family:ui-monospace,Menlo,monospace}
+.trace .step b{color:#b9a9ff}
+.trace .step .ms{color:#6b7280;float:right}
+.chatinput{display:flex;gap:8px;margin-top:4px}
+.chatinput input{flex:1;background:#0d1020;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;outline:none}
+.chatinput input:focus{border-color:rgba(124,92,255,.55)}
+.forbidden{color:#ffb3b3}
 </style>
 </head>
 <body>
@@ -71,6 +92,7 @@ pre{white-space:pre-wrap;font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monosp
     <div class="tab" data-tab="backups">备份</div>
     <div class="tab" data-tab="assets">资产台账</div>
     <div class="tab" data-tab="handover">交接班</div>
+    <div class="tab" data-tab="chat">小浣熊</div>
   </div>
   <div class="grid">
     <div>
@@ -94,6 +116,22 @@ pre{white-space:pre-wrap;font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monosp
       <div class="card" id="panel-handover" style="display:none">
         <h2>交接班</h2>
         <pre id="handover"></pre>
+      </div>
+      <div class="card" id="panel-chat" style="display:none">
+        <h2>小浣熊 · 值班助手</h2>
+        <div class="chips" id="chatChips">
+          <span class="chip" data-q="本班必须处理什么？">本班必须处理什么</span>
+          <span class="chip" data-q="哪些备份超时了？">哪些备份超时</span>
+          <span class="chip" data-q="证书快到期了吗？">证书快到期了吗</span>
+          <span class="chip" data-q="生成交接班">生成交接班</span>
+          <span class="chip" data-q="为什么 F1 是阻断？">为什么 F1 是阻断</span>
+          <span class="chip" data-q="srv-app-01 上有什么？">srv-app-01 上有什么</span>
+        </div>
+        <div class="chatlog" id="chatLog"></div>
+        <div class="chatinput">
+          <input type="text" id="chatInput" placeholder="用自然语言问值班问题，如「本班必须处理什么」">
+          <button id="chatSend">发送</button>
+        </div>
       </div>
     </div>
     <div>
@@ -187,9 +225,10 @@ async function ack(id) {
 document.querySelectorAll('.tab').forEach(tab => tab.onclick = () => {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   tab.classList.add('active');
-  ['findings','alerts','backups','assets','handover'].forEach(name => {
+  ['findings','alerts','backups','assets','handover','chat'].forEach(name => {
     $('panel-' + name).style.display = name === tab.dataset.tab ? '' : 'none';
   });
+  if (tab.dataset.tab === 'chat') { $('chatInput').focus(); }
 });
 
 $('refresh').onclick = load;
@@ -198,6 +237,94 @@ $('assetSearch').addEventListener('input', (e) => {
   const q = e.target.value.trim().toLowerCase();
   renderAssets((state.assets_list || []).filter(a => [a.name,a.id,a.ip,a.host,a.owner,a.vendor,a.type].some(v => String(v||'').toLowerCase().includes(q))));
 });
+
+// ---- 小浣熊对话 ----
+let sessionId = Math.random().toString(36).slice(2, 14);
+
+function escAns(s) {
+  // 转义后把 finding id 渲染成可点卡片
+  let out = esc(s);
+  out = out.replace(/\b(F\d+)\b/g, '<span class="fid" data-fid="$1" title="点击查看详情">$1</span>');
+  return out;
+}
+
+function addMsg(kind, content, trace) {
+  const log = $('chatLog');
+  const div = document.createElement('div');
+  div.className = 'msg ' + kind;
+  if (kind === 'user') {
+    div.textContent = content;
+  } else {
+    let html = '<div class="ans' + (trace && trace.forbidden ? ' forbidden' : '') + '">' + escAns(content) + '</div>';
+    if (trace && trace.tool_trace && trace.tool_trace.length) {
+      html += '<details class="trace"><summary>调用了 ' + trace.tool_trace.length + ' 个工具（点开看轨迹）</summary>';
+      trace.tool_trace.forEach(t => {
+        html += '<div class="step"><b>' + esc(t.tool) + '</b> ' + esc(t.summary || '') +
+                '<span class="ms">' + (t.duration_ms || 0) + 'ms</span></div>';
+      });
+      html += '</details>';
+    }
+    div.innerHTML = html;
+  }
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+// 点 finding id 卡片：跳回发现 tab 并高亮对应条目
+$('chatLog').addEventListener('click', (e) => {
+  const fid = e.target.getAttribute && e.target.getAttribute('data-fid');
+  if (!fid) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const findingsTab = document.querySelector('.tab[data-tab="findings"]');
+  if (findingsTab) findingsTab.classList.add('active');
+  ['findings','alerts','backups','assets','handover','chat'].forEach(name => {
+    $('panel-' + name).style.display = name === 'findings' ? '' : 'none';
+  });
+  const el = document.querySelector('.finding[data-id="' + fid + '"]');
+  if (el) {
+    el.style.outline = '2px solid var(--accent)';
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    setTimeout(() => { el.style.outline = ''; }, 2000);
+  }
+});
+
+async function sendChat(text) {
+  const msg = (text || '').trim();
+  if (!msg) return;
+  addMsg('user', msg);
+  $('chatInput').value = '';
+  const btn = $('chatSend');
+  btn.disabled = true; btn.textContent = '思考中…';
+  try {
+    const r = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: msg, session_id: sessionId})
+    });
+    const data = await r.json();
+    if (data.error) {
+      addMsg('bot', '出错：' + data.error);
+    } else {
+      addMsg('bot', data.answer, {tool_trace: data.tool_trace, forbidden: data.forbidden});
+    }
+  } catch (err) {
+    addMsg('bot', '请求失败：' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '发送';
+    $('chatInput').focus();
+  }
+}
+
+$('chatSend').onclick = () => sendChat($('chatInput').value);
+$('chatInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat($('chatInput').value); }
+});
+$('chatChips').addEventListener('click', (e) => {
+  const q = e.target.getAttribute && e.target.getAttribute('data-q');
+  if (q) sendChat(q);
+});
+
 load();
 </script>
 </body>
