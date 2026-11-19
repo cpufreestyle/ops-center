@@ -34,3 +34,20 @@ output/
 # PPT 构建器内部元数据
 .artifact-delivery.json
 .*.artifact.json
+
+# 提交截图与表单快照：含真实个人/团队信息，绝不公开提交
+提交材料/ego_*.png
+提交材料/managed_form_snapshot.md
+提交材料/ops-center-hackathon.zip
+
+# PPT 构建中间产物（只保留最终 pptx 与 html）
+提交材料/ppt/deck.patch*.json
+提交材料/ppt/design_*.json
+提交材料/ppt/fallback.html
+提交材料/ppt/outline.json
+提交材料/ppt/qa/
+提交材料/ppt/recovery-*.deck.json
+提交材料/ppt/slides/
+
+# 出海询盘助手大图（另一赛道素材，无需入库）
+出海询盘助手/*.png
