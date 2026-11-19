@@ -1,0 +1,338 @@
+{
+  "schema_version": 1,
+  "title": "运维值班台 · 全能工作台（Ops Center）",
+  "theme_id": "data-intelligence",
+  "design": {
+    "version": 2,
+    "family": "analytical-exhibit",
+    "variant": "exhibit-grid"
+  },
+  "design_plan": {
+    "schema_version": 1,
+    "input_hash": "f3c1d7fe3b64b1d72f0a1f8486f7d94b6bcd0b4cc0785b32da9c299fa5bdcc23",
+    "catalog_hash": "5055387395c3833b96fba2df691129708982bb1a6d53810f41e2afd4f3bdca4a",
+    "plan_hash": "b8a9205b027645f4e6957ba87f5a3e8c074b6a622f2eb9962e3ecd1c3c8b446e",
+    "layout_hints_only": true,
+    "visual_profile": {
+      "id": "ops-center-night-console",
+      "semantic_tags": [
+        "运维值班",
+        "Agent 只读工具调用",
+        "证据链",
+        "审计合规",
+        "内网离线"
+      ],
+      "motifs": [
+        "控制台面板",
+        "状态徽章",
+        "工具轨迹线",
+        "分层堆栈",
+        "坐标网格"
+      ],
+      "geometry": [
+        "深蓝夜色底上的细网格与描边面板，直角模块，克制留白"
+      ],
+      "typography": "紧凑无衬线标题 + 等宽标签呈现工具名与指标",
+      "composition": [
+        "证据栏与分层堆栈组织信息，指标以卡片带横排呈现"
+      ],
+      "asset_style": "与产品浏览器 6 页签 UI 一致的深蓝控制台质感，亮蓝主色、青绿状态点缀"
+    }
+  },
+  "design_contract": {
+    "version": 1,
+    "palette": {
+      "source": "inferred",
+      "background": {
+        "value": "#10182A",
+        "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+        "source": "inferred"
+      },
+      "text": {
+        "value": "#F4F7FB",
+        "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+        "source": "inferred"
+      },
+      "primary": {
+        "value": "#4DA3FF",
+        "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+        "source": "inferred"
+      },
+      "accent": {
+        "value": "#2DD4BF",
+        "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+        "source": "inferred"
+      },
+      "secondary": {
+        "value": "#8FA8C8",
+        "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+        "source": "inferred"
+      },
+      "heading": {
+        "value": "#4DA3FF",
+        "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+        "source": "inferred"
+      },
+      "accent_usage": "sparse",
+      "requested": [
+        "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。"
+      ],
+      "version": 2,
+      "tokens": {
+        "background": "#10182A",
+        "text": "#F4F7FB",
+        "surface": "#1E2537",
+        "surface_strong": "#2B3343",
+        "border": "#474E5C",
+        "primary": "#4DA3FF",
+        "primary_text": "#4DA3FF",
+        "muted": "#ABB0B8",
+        "inverse": "#111111",
+        "primary_soft": "#192B48",
+        "accent": "#2DD4BF",
+        "secondary": "#8FA8C8",
+        "chart": [
+          "#4DA3FF",
+          "#2DD4BF",
+          "#8FA8C8",
+          "#366EAE"
+        ],
+        "alt_background": "#10182A",
+        "alt_surface": "#1E2537",
+        "alt_text": "#F4F7FB",
+        "alt_muted": "#ABB0B8",
+        "alt_border": "#474E5C",
+        "alt_primary": "#4DA3FF",
+        "alt_primary_text": "#4DA3FF",
+        "accent_text": "#2DD4BF",
+        "alt_accent_text": "#2DD4BF",
+        "surface_text": "#F4F7FB",
+        "surface_strong_text": "#F4F7FB",
+        "primary_soft_text": "#F4F7FB",
+        "primary_fill_text": "#111111",
+        "chart_text": [
+          "#111111",
+          "#111111",
+          "#111111",
+          "#F4F7FB"
+        ],
+        "heading": "#4DA3FF"
+      },
+      "accent_usage_source": "inferred"
+    }
+  },
+  "truth_contract": {
+    "mode": "source_bound",
+    "source_facts": [
+      "jixu\n\n超时后按默认项选择：“快速模式”（option_id=fast）。请按该选择继续原任务。"
+    ],
+    "assumptions": []
+  },
+  "slides": [
+    {
+      "id": "slide-01",
+      "layout_id": "cover-editorial-v1",
+      "props": {
+        "subtitle": "让值班员一眼看到「现在必须处理什么、为什么、交给谁」",
+        "marker": "2026",
+        "meta": "路演 · 4 分钟",
+        "tags": [
+          "规则出事实 · AI 做组织",
+          "只读接入 · 数据不出域",
+          "离线可跑 · 无需 API key"
+        ],
+        "alignment": "left",
+        "composition": "standard",
+        "eyebrow": "虹桥国际科技周黑客松 · AGENT 赛道",
+        "title": "运维值班台 · 全能工作台（Ops Center）"
+      },
+      "source_outline_page": 1,
+      "outline_intent": {
+        "title": "运维值班台 · 全能工作台（Ops Center）",
+        "message": "让值班员一眼看到「现在必须处理什么、为什么、交给谁」",
+        "layout": "cover",
+        "visual": "封面大标题 + 三条定位标签"
+      }
+    },
+    {
+      "id": "slide-02",
+      "layout_id": "cards-grid-v1",
+      "props": {
+        "subtitle": "告警、备份、资产、交接班散在多处，值班员靠人工记忆串联，风险被噪声淹没",
+        "variant": "numbered",
+        "composition": "standard",
+        "eyebrow": "痛点",
+        "title": "值班缺的不是数据，是组织",
+        "items": [
+          {
+            "kicker": "01 监控",
+            "title": "告警重复噪声大",
+            "body": "同一故障反复刷屏，真实优先级被淹没，值班员逐条人工分辨。"
+          },
+          {
+            "kicker": "02 备份",
+            "title": "备份超时靠人记",
+            "body": "长期未成功可能几天无人发现，直到需要恢复数据才暴露。"
+          },
+          {
+            "kicker": "03 台账",
+            "title": "资产风险散在表格",
+            "body": "证书到期、无责任人、无备份，难以统一排查，检查靠翻表。"
+          },
+          {
+            "kicker": "04 交接",
+            "title": "交接班靠手工整理",
+            "body": "口径不一、遗漏事项无人兜底，下一班从零开始梳理。"
+          }
+        ]
+      },
+      "source_outline_page": 2,
+      "outline_intent": {
+        "title": "值班缺的不是数据，是组织",
+        "message": "告警、备份、资产、交接班散在多处，值班员靠人工记忆串联，风险被噪声淹没",
+        "layout": "cards",
+        "visual": "四张痛点卡片 + 值班员角色泳道（监控/备份/台账/交接四个割裂系统 → 人工串联）"
+      }
+    },
+    {
+      "id": "slide-03",
+      "layout_id": "architecture-layered-v1",
+      "props": {
+        "subtitle": "四层架构把现有导出数据组织成可执行事项：合并告警、判备份时效、查资产风险、自动交接班",
+        "note": "只读边界：不登录设备、不执行命令、不改配置；确认与导出等写动作必须人工点击。",
+        "variant": "stack",
+        "composition": "standard",
+        "eyebrow": "解决方案",
+        "title": "不替换系统，把值班串成闭环",
+        "layers": [
+          {
+            "label": "DATA & RULES",
+            "title": "数据与规则层",
+            "modules": [
+              "ops_center.py 纯函数",
+              "CSV / 导出只读接入",
+              "告警合并 · 备份双阈值"
+            ]
+          },
+          {
+            "label": "TOOLS",
+            "title": "工具层",
+            "modules": [
+              "9 个 JSON Schema 工具",
+              "告警 / 备份 / 资产 / 交接",
+              "结果裁剪 + 证据字段"
+            ]
+          },
+          {
+            "label": "AGENT",
+            "title": "Agent 调度层",
+            "modules": [
+              "单会话 ≤8 步循环",
+              "每步写审计日志",
+              "越权请求一律拒绝"
+            ]
+          },
+          {
+            "label": "UI",
+            "title": "界面层",
+            "modules": [
+              "浏览器 6 页签",
+              "小浣熊对话 + 工具轨迹",
+              "事项确认 · finding 跳转"
+            ]
+          }
+        ]
+      },
+      "source_outline_page": 3,
+      "outline_intent": {
+        "title": "不替换系统，把值班串成闭环",
+        "message": "四层架构把现有导出数据组织成可执行事项：合并告警、判备份时效、查资产风险、自动交接班",
+        "layout": "timeline",
+        "visual": "四层架构自下而上流程示意（数据规则 → 工具 → Agent → 界面），右侧标注只读边界"
+      }
+    },
+    {
+      "id": "slide-04",
+      "layout_id": "kpi-grid-v1",
+      "props": {
+        "subtitle": "自然语言提问 → 自动调用只读工具 → 结论附工具轨迹与证据；7 条验收用例全通过（含 2 条越权拒绝）",
+        "variant": "ledger",
+        "composition": "standard",
+        "eyebrow": "演示验证（合成数据）",
+        "title": "Agent 自己调工具，回答带证据",
+        "items": [
+          {
+            "label": "告警降噪",
+            "value": "6 → 5",
+            "detail": "原始告警按主机+服务+标题合并，保留次数与最高级别。",
+            "delta": "演示合成数据"
+          },
+          {
+            "label": "备份时效异常",
+            "value": "4 / 4",
+            "detail": "全部识别出时效异常，含 1 项从未成功。",
+            "delta": "演示合成数据"
+          },
+          {
+            "label": "最长未成功间隔",
+            "value": "244.7h",
+            "detail": "规则自动揪出并置顶提示。",
+            "delta": "演示合成数据"
+          },
+          {
+            "label": "资产统一排查",
+            "value": "16 项",
+            "detail": "证书到期 / 责任人缺失 / 无备份多类风险。",
+            "delta": "演示合成数据"
+          },
+          {
+            "label": "安全边界验收",
+            "value": "7 / 7",
+            "detail": "含重启、执行命令 2 条越权拒绝用例。",
+            "delta": "验收用例"
+          }
+        ]
+      },
+      "source_outline_page": 4,
+      "outline_intent": {
+        "title": "Agent 自己调工具，回答带证据",
+        "message": "自然语言提问 → Agent 自动调用只读工具 → 每条结论附工具轨迹与证据，演示数据全部验证通过",
+        "layout": "dashboard",
+        "visual": "KPI strip（6→5、4/4、244.7h、16）+ 一条问答示例流（提问→工具轨迹→带证据回答）"
+      }
+    },
+    {
+      "id": "slide-05",
+      "layout_id": "closing-next-steps-v1",
+      "props": {
+        "subtitle": "单文件 Python 服务离线可跑、无需 API key，可插拔本地大模型；面向政府/事业单位信息中心值班场景落地",
+        "actions": [
+          {
+            "label": "在线体验",
+            "detail": "魔搭创空间在线 Demo（链接见提交表单），评委与观众可直接试。"
+          },
+          {
+            "label": "内网试点",
+            "detail": "只读接入 + 全程审计、数据不出域，90 天试点计划面向信息中心值班场景。"
+          },
+          {
+            "label": "本地模型升级",
+            "detail": "默认安全降级模式；设 OPS_LLM_BASE_URL 即切换 OpenAI 兼容端点自由生成。"
+          }
+        ],
+        "contact": "现场演示：python3 ops_center.py serve → 127.0.0.1:8890",
+        "variant": "next-steps",
+        "composition": "standard",
+        "eyebrow": "落地与下一步",
+        "title": "轻到 1–2 天可装，安全到敢在内网跑"
+      },
+      "source_outline_page": 5,
+      "outline_intent": {
+        "title": "轻到 1–2 天可装，安全到敢在内网跑",
+        "message": "单文件 Python 服务离线可跑、无需 API key，可插拔本地大模型；面向政府/事业单位信息中心值班场景落地",
+        "layout": "closing",
+        "visual": "收尾主张 + 三步落地路径（在线体验 → 内网试点 → 本地模型升级）"
+      }
+    }
+  ]
+}
