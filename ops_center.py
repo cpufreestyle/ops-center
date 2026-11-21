@@ -10,6 +10,8 @@ import csv
 import json
 import os
 import sys
+import threading
+import time
 from datetime import datetime, timedelta, timezone
 from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -418,13 +420,12 @@ def handover_markdown(state: dict, now: datetime) -> str:
         lines.append(f"- [{item['id']}] {item['title']}：{item['detail']}")
         lines.append(f"  - 建议：{item['suggestion']}")
     lines += ["", "## 三、近期变更（24 小时）"]
-    changes = [
-        asset
-        for asset in state["assets_list"]
-        if asset.get("last_change")
-        and parse_dt(asset["last_change"])
-        and (now - parse_dt(asset["last_change"])).total_seconds() <= 86400
-    ]
+    changes = []
+    for _asset in state["assets_list"]:
+        if _asset.get("last_change"):
+            _dt = parse_dt(_asset["last_change"])
+            if _dt and (now - _dt).total_seconds() <= 86400:
+                changes.append(_asset)
     if not changes:
         lines.append("- 无登记变更。")
     for asset in changes:
@@ -456,15 +457,20 @@ def xhx_prompt(state: dict) -> str:
     return "\n".join(lines)
 
 
-def build_state(now: datetime | None = None) -> dict:
-    now = now or datetime.now(CST)
+_state_cache: dict = {}
+_state_cache_lock = threading.Lock()
+_STATE_TTL = 60  # seconds
+
+
+def _build_state_uncached(now: datetime) -> dict:
     assets, alerts = load_data()
+    deduped_alerts = dedupe_alerts(alerts)
     computed = build_findings(assets, alerts, now)
     state = {
         "generated_at": now.isoformat(),
         "source": data_source(),
         "assets_list": assets,
-        "alerts_list": dedupe_alerts(alerts),
+        "alerts_list": deduped_alerts,
         "findings": computed["findings"],
         "counts": computed["counts"],
         "alerts": computed["alerts"],
@@ -474,6 +480,29 @@ def build_state(now: datetime | None = None) -> dict:
     state["handover"] = handover_markdown(state, now)
     state["xhx_prompt"] = xhx_prompt(state)
     return state
+
+
+def build_state(now: datetime | None = None) -> dict:
+    """Return cached state, refreshed at most every _STATE_TTL seconds.
+
+    Pass now=<datetime> to bypass the cache (used in tests and report CLI).
+    """
+    with _state_cache_lock:
+        cached = _state_cache.get("state")
+        if now is None and cached is not None and (time.monotonic() - _state_cache.get("at", 0.0)) < _STATE_TTL:
+            return cached
+        fresh_now = now or datetime.now(CST)
+        state = _build_state_uncached(fresh_now)
+        if now is None:
+            _state_cache["state"] = state
+            _state_cache["at"] = time.monotonic()
+        return state
+
+
+def invalidate_cache() -> None:
+    """Force the next build_state() call to recompute from disk."""
+    with _state_cache_lock:
+        _state_cache.clear()
 
 
 def kindle_page(state: dict) -> str:
@@ -609,9 +638,10 @@ def validate_data() -> bool:
     return ok
 
 
-def serve(port: int = 8890) -> None:
-    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(f"运维值班台: http://127.0.0.1:{port}")
+def serve(port: int = 8890, host: str = "127.0.0.1") -> None:
+    server = ThreadingHTTPServer((host, port), Handler)
+    display_host = "0.0.0.0" if host == "0.0.0.0" else host
+    print(f"运维值班台: http://{display_host}:{port}")
     print(f"数据目录: {DATA_DIR}")
     server.serve_forever()
 
@@ -647,8 +677,8 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/assets":
             q = parse_qs(parsed.query).get("q", [""])[0]
-            assets, _ = load_data()
-            self._json({"assets": asset_search(assets, q)})
+            state = build_state()
+            self._json({"assets": asset_search(state["assets_list"], q)})
             return
         if parsed.path == "/api/handover":
             self._json({"handover": build_state()["handover"]})
@@ -656,9 +686,16 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/xhx-prompt":
             self._json({"prompt": build_state()["xhx_prompt"]})
             return
+        if parsed.path == "/healthz":
+            self._json({"ok": True, "generated_at": build_state()["generated_at"]})
+            return
         self._send(404, b"not found", "text/plain")
 
     def do_POST(self):
+        if self.path == "/api/reload":
+            invalidate_cache()
+            self._json({"ok": True, "message": "cache cleared"})
+            return
         if self.path != "/api/ack":
             self._send(404, b"not found", "text/plain")
             return
@@ -687,6 +724,7 @@ def main(argv: list[str] | None = None) -> int:
 
     serve_parser = sub.add_parser("serve", help="启动值班台 Web UI")
     serve_parser.add_argument("--port", type=int, default=int(os.environ.get("OPS_HTTP_PORT", "8890")))
+    serve_parser.add_argument("--host", default=os.environ.get("OPS_HTTP_HOST", "127.0.0.1"), help="监听地址（0.0.0.0 供局域网访问）")
 
     report_parser = sub.add_parser("report", help="打印今天的交接班 Markdown")
     report_parser.add_argument("--out", default=None, help="同时写入文件")
@@ -699,7 +737,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command in (None, "serve"):
         port = getattr(args, "port", int(os.environ.get("OPS_HTTP_PORT", "8890")))
-        serve(port)
+        host = getattr(args, "host", os.environ.get("OPS_HTTP_HOST", "127.0.0.1"))
+        serve(port, host)
         return 0
     if args.command == "report":
         text = build_state()["handover"]

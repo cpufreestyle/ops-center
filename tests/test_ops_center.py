@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import unittest
 from datetime import datetime, timedelta
+import json
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -17,6 +18,7 @@ from ops_center import (  # noqa: E402
     kindle_page,
     parse_dt,
 )
+from ops_center import invalidate_cache  # noqa: E402
 
 NOW = datetime(2026, 11, 16, 22, 0, tzinfo=CST)
 
@@ -130,3 +132,54 @@ class StateTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CacheTests(unittest.TestCase):
+    def setUp(self) -> None:
+        invalidate_cache()
+
+    def test_cache_returns_same_object(self) -> None:
+        a = build_state()
+        b = build_state()
+        self.assertIs(a, b, "Second call should return the cached object")
+
+    def test_cache_bypass_with_explicit_now(self) -> None:
+        cached = build_state()
+        fresh = build_state(now=datetime.now(CST))
+        self.assertIsNot(cached, fresh, "Explicit now= should bypass cache")
+
+    def test_invalidate_clears_cache(self) -> None:
+        first = build_state()
+        invalidate_cache()
+        second = build_state()
+        self.assertIsNot(first, second, "After invalidation a new object must be built")
+
+
+class ServeTests(unittest.TestCase):
+    def _make_request(self, path: str, method: str = "GET") -> tuple[int, bytes]:
+        import http.client
+        conn = http.client.HTTPConnection("127.0.0.1", 8890, timeout=5)
+        conn.request(method, path)
+        resp = conn.getresponse()
+        body = resp.read()
+        conn.close()
+        return resp.status, body
+
+    def test_healthz(self) -> None:
+        try:
+            status, body = self._make_request("/healthz")
+        except OSError:
+            self.skipTest("serve not running on :8890")
+        self.assertEqual(status, 200)
+        data = json.loads(body)
+        self.assertTrue(data.get("ok"))
+        self.assertIn("generated_at", data)
+
+    def test_reload(self) -> None:
+        try:
+            status, body = self._make_request("/api/reload", method="POST")
+        except OSError:
+            self.skipTest("serve not running on :8890")
+        self.assertEqual(status, 200)
+        data = json.loads(body)
+        self.assertTrue(data.get("ok"))
