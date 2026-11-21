@@ -24,11 +24,25 @@ python3 ops_center.py report        # 打印交接班
 python3 ops_center.py serve         # http://127.0.0.1:8890
 ```
 
+局域网访问（Kindle 看板需要）加 `--host 0.0.0.0`：
+
+```bash
+python3 ops_center.py serve --host 0.0.0.0
+```
+
 把监控/备份/资产系统导出的 CSV 放进 `data/inbox/`，刷新页面或重新运行 `report` 即可。
 
 ## Kindle
 
-Kindle 和 Mac 连同一个 Wi-Fi，浏览器打开 `http://<Mac-IP>:8890/kindle`。详见 [kindle/README.md](kindle/README.md)。
+Kindle 和 Mac 连同一个 Wi-Fi，浏览器打开 `http://<Mac-IP>:8890/kindle`。
+
+服务必须监听 `0.0.0.0`（默认 `127.0.0.1` 只对本机可见）：
+
+```bash
+python3 ops_center.py serve --host 0.0.0.0
+```
+
+详见 [kindle/README.md](kindle/README.md)。
 
 ## 小浣熊
 

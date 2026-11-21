@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  运维值班台 launchd 常驻配置模板。
+
+  用法：把下面的占位符替换成实际路径后安装到 ~/Library/LaunchAgents/
+
+    OPS_DIR=/Users/Shared/ops-center
+    sed -e "s|__OPS_CENTER_DIR__|$OPS_DIR|g" \
+        -e "s|__HOME__|$HOME|g" \
+        launchd/com.local.ops-center.plist > ~/Library/LaunchAgents/com.local.ops-center.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.local.ops-center.plist
+
+  --host 0.0.0.0 让局域网（含 Kindle）可访问；如果只在本机用，改成 127.0.0.1。
+  绝对不要把这个端口暴露到公网。
+-->
+<dict>
+  <key>Label</key>
+  <string>com.local.ops-center</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/python3</string>
+    <string>-u</string>
+    <string>__OPS_CENTER_DIR__/ops_center.py</string>
+    <string>serve</string>
+    <string>--port</string>
+    <string>8890</string>
+    <string>--host</string>
+    <string>0.0.0.0</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__OPS_CENTER_DIR__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key>
+    <string>__HOME__</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>LANG</key>
+    <string>zh_CN.UTF-8</string>
+    <key>PYTHONUNBUFFERED</key>
+    <string>1</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>__OPS_CENTER_DIR__/logs/ops-center.log</string>
+  <key>StandardErrorPath</key>
+  <string>__OPS_CENTER_DIR__/logs/ops-center.err.log</string>
+</dict>
+</plist>

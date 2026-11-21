@@ -11,17 +11,21 @@
    ipconfig getifaddr en0
    ```
 
-3. 启动值班台：
+3. 启动值班台并监听局域网（Kindle 访问必须绑定 `0.0.0.0`，默认的 `127.0.0.1` 只对本机可见）：
 
    ```bash
-   python3 ops_center.py serve
+   python3 ops_center.py serve --host 0.0.0.0
    ```
+
+   或用环境变量：`OPS_HTTP_HOST=0.0.0.0 python3 ops_center.py serve`
 
 4. Kindle 打开「体验版网页浏览器」，访问：
 
    ```
    http://<Mac-IP>:8890/kindle
    ```
+
+   例：`http://192.168.1.112:8890/kindle`
 
 5. 加入书签，放在桌上常亮。页面每 5 分钟刷新一次；Kindle 休眠后需要点一下刷新。
 
