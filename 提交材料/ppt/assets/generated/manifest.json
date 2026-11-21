@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "mode": "auto",
+  "generation_forbidden": false,
+  "deck": {
+    "title": "运维值班台 · 全能工作台（Ops Center）",
+    "theme_id": "data-intelligence",
+    "design": {
+      "version": 2,
+      "family": "analytical-exhibit",
+      "variant": "exhibit-grid"
+    },
+    "design_contract": {
+      "version": 1,
+      "palette": {
+        "source": "inferred",
+        "background": {
+          "value": "#10182A",
+          "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+          "source": "inferred"
+        },
+        "text": {
+          "value": "#F4F7FB",
+          "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+          "source": "inferred"
+        },
+        "primary": {
+          "value": "#4DA3FF",
+          "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+          "source": "inferred"
+        },
+        "accent": {
+          "value": "#2DD4BF",
+          "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+          "source": "inferred"
+        },
+        "secondary": {
+          "value": "#8FA8C8",
+          "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+          "source": "inferred"
+        },
+        "heading": {
+          "value": "#4DA3FF",
+          "requested": "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。",
+          "source": "inferred"
+        },
+        "accent_usage": "sparse",
+        "requested": [
+          "用户明确要求深蓝夜色底+亮蓝主色+青绿点缀，故选唯一深色候选 data-intelligence：高密度证据型控制台气质契合运维值班台与「数据说话」路演；网格画布、紧凑无衬线与等宽标签呼应产品 6 页签 UI（创意演绎，非官方品牌色）。文本/主色/点缀对深底对比度均≥6.7:1，点缀稀疏使用。"
+        ],
+        "version": 2,
+        "tokens": {
+          "background": "#10182A",
+          "text": "#F4F7FB",
+          "surface": "#1E2537",
+          "surface_strong": "#2B3343",
+          "border": "#474E5C",
+          "primary": "#4DA3FF",
+          "primary_text": "#4DA3FF",
+          "muted": "#ABB0B8",
+          "inverse": "#111111",
+          "primary_soft": "#192B48",
+          "accent": "#2DD4BF",
+          "secondary": "#8FA8C8",
+          "chart": [
+            "#4DA3FF",
+            "#2DD4BF",
+            "#8FA8C8",
+            "#366EAE"
+          ],
+          "alt_background": "#10182A",
+          "alt_surface": "#1E2537",
+          "alt_text": "#F4F7FB",
+          "alt_muted": "#ABB0B8",
+          "alt_border": "#474E5C",
+          "alt_primary": "#4DA3FF",
+          "alt_primary_text": "#4DA3FF",
+          "accent_text": "#2DD4BF",
+          "alt_accent_text": "#2DD4BF",
+          "surface_text": "#F4F7FB",
+          "surface_strong_text": "#F4F7FB",
+          "primary_soft_text": "#F4F7FB",
+          "primary_fill_text": "#111111",
+          "chart_text": [
+            "#111111",
+            "#111111",
+            "#111111",
+            "#F4F7FB"
+          ],
+          "heading": "#4DA3FF"
+        },
+        "accent_usage_source": "inferred"
+      }
+    }
+  },
+  "image_plan": [
+    {
+      "slide": 1,
+      "slide_id": "slide-01",
+      "layout_id": "cover-editorial-v1",
+      "slot": "background",
+      "prop_path": "background",
+      "required": true,
+      "decision": "generate",
+      "status": "pending",
+      "acquire_via": "ai",
+      "resolved_via": null,
+      "decision_reason": "the brief or outline explicitly calls for a product or interface cover visual",
+      "prompt": "Deck context: 运维值班台 · 全能工作台（Ops Center）. Slide title: 运维值班台 · 全能工作台（Ops Center）. Page intent: 让值班员一眼看到「现在必须处理什么、为什么、交给谁」. Visual direction: 封面大标题 + 三条定位标签. Subject visual identity: 与产品浏览器 6 页签 UI 一致的深蓝控制台质感，亮蓝主色、青绿状态点缀 Composition contract: keep text-safe region editorial-cover-safe x=92,y=78,w=1736,h=930 calm and low-detail. Use only atmospheric detail behind the copy. Create one background visual with a clear focal subject and room for adjacent slide copy. If showing software, make it an explicitly conceptual product-interface illustration rather than claiming to reproduce a real screenshot. No embedded text, no logos, no watermark, and no decorative filler.",
+      "output_path": "assets/generated/slide-01-background.png",
+      "allowed_strategies": [
+        "generate",
+        "use_existing",
+        "skip"
+      ],
+      "kind": "background",
+      "placement": "full-slide",
+      "purpose": "full-bleed slide background",
+      "treatment": "wash-light",
+      "layout_contract": {
+        "slide_size": {
+          "width": 1920,
+          "height": 1080
+        },
+        "text_regions": [
+          {
+            "name": "editorial-cover-safe",
+            "x": 92,
+            "y": 78,
+            "width": 1736,
+            "height": 930
+          }
+        ],
+        "visual_focus_regions": []
+      }
+    },
+    {
+      "slide": 2,
+      "slide_id": "slide-02",
+      "layout_id": "cards-grid-v1",
+      "slot": "background",
+      "prop_path": "background",
+      "required": false,
+      "decision": "skip",
+      "status": "skipped",
+      "acquire_via": "none",
+      "resolved_via": null,
+      "decision_reason": "editable text, data, or shapes communicate this page more clearly than bitmap media",
+      "prompt": "",
+      "output_path": null,
+      "allowed_strategies": [
+        "generate",
+        "use_existing",
+        "skip"
+      ],
+      "kind": "background",
+      "placement": "full-slide",
+      "purpose": "full-bleed slide background",
+      "treatment": "wash-light"
+    },
+    {
+      "slide": 3,
+      "slide_id": "slide-03",
+      "layout_id": "architecture-layered-v1",
+      "slot": "background",
+      "prop_path": "background",
+      "required": false,
+      "decision": "skip",
+      "status": "skipped",
+      "acquire_via": "none",
+      "resolved_via": null,
+      "decision_reason": "editable text, data, or shapes communicate this page more clearly than bitmap media",
+      "prompt": "",
+      "output_path": null,
+      "allowed_strategies": [
+        "generate",
+        "use_existing",
+        "skip"
+      ],
+      "kind": "background",
+      "placement": "full-slide",
+      "purpose": "full-bleed slide background",
+      "treatment": "wash-light"
+    },
+    {
+      "slide": 4,
+      "slide_id": "slide-04",
+      "layout_id": "kpi-grid-v1",
+      "slot": "background",
+      "prop_path": "background",
+      "required": false,
+      "decision": "skip",
+      "status": "skipped",
+      "acquire_via": "none",
+      "resolved_via": null,
+      "decision_reason": "editable text, data, or shapes communicate this page more clearly than bitmap media",
+      "prompt": "",
+      "output_path": null,
+      "allowed_strategies": [
+        "generate",
+        "use_existing",
+        "skip"
+      ],
+      "kind": "background",
+      "placement": "full-slide",
+      "purpose": "full-bleed slide background",
+      "treatment": "wash-light"
+    },
+    {
+      "slide": 5,
+      "slide_id": "slide-05",
+      "layout_id": "closing-next-steps-v1",
+      "slot": "background",
+      "prop_path": "background",
+      "required": false,
+      "decision": "skip",
+      "status": "skipped",
+      "acquire_via": "none",
+      "resolved_via": null,
+      "decision_reason": "editable text, data, or shapes communicate this page more clearly than bitmap media",
+      "prompt": "",
+      "output_path": null,
+      "allowed_strategies": [
+        "generate",
+        "use_existing",
+        "skip"
+      ],
+      "kind": "background",
+      "placement": "full-slide",
+      "purpose": "full-bleed slide background",
+      "treatment": "wash-light"
+    }
+  ]
+}
