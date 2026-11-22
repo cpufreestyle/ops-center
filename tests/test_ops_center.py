@@ -183,3 +183,20 @@ class ServeTests(unittest.TestCase):
         self.assertEqual(status, 200)
         data = json.loads(body)
         self.assertTrue(data.get("ok"))
+
+
+class KindleShortcutTests(unittest.TestCase):
+    def test_shortcut_prints_lan_url(self) -> None:
+        import re
+        import subprocess
+        script = Path(__file__).resolve().parent.parent / "scripts" / "ops_center_kindle.sh"
+        result = subprocess.run(
+            ["sh", str(script), "--print"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        url = result.stdout.strip()
+        self.assertTrue(url.startswith("http://"), msg=f"unexpected URL: {url}")
+        self.assertTrue(url.endswith(":8890/kindle"), msg=f"unexpected URL: {url}")
+        self.assertRegex(url, r"^http://[0-9.]+:8890/kindle$")
