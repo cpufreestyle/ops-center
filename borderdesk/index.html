@@ -1,1 +1,367 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BorderDesk｜出海询盘助手</title><style>:root{font-family:system-ui,"Microsoft YaHei",sans-serif;color:#172a38;background:#f3f6f8}*{box-sizing:border-box}body{margin:0}header{background:#112e43;color:#fff;padding:22px max(20px,calc((100vw - 1100px)/2))}header small{color:#9fdcd4;letter-spacing:.14em}h1{margin:5px 0;font-size:30px}header p{margin:0;color:#c8d7e0}main{max-width:1100px;margin:25px auto;padding:0 18px;display:grid;grid-template-columns:330px 1fr;gap:18px}.card{background:white;border:1px solid #dce5e9;border-radius:14px;padding:20px;box-shadow:0 5px 22px #122b3b08}h2{font-size:18px;margin:0 0 16px}label{display:block;font-weight:650;font-size:13px;margin:16px 0 6px}textarea,input,select{width:100%;border:1px solid #bfd0d9;border-radius:8px;padding:10px;font:inherit;background:white;color:#172a38}textarea{min-height:130px;resize:vertical}button{border:0;border-radius:8px;padding:11px 15px;font:inherit;font-weight:700;cursor:pointer}button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #58b9a9;outline-offset:2px}.primary{background:#087d76;color:white;width:100%;margin-top:18px}.sub{background:#e9f3f2;color:#075e59}.muted{color:#607482;font-size:13px;line-height:1.55}.tag{display:inline-block;background:#e5f4f1;color:#006b62;border-radius:100px;padding:5px 10px;font-size:12px;font-weight:700;margin:0 5px 5px 0}.tag.warn{background:#fff2d7;color:#815900}.result{min-height:350px}.strip{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid #e1eaee;padding-bottom:14px;margin-bottom:14px}h3{font-size:14px;margin:20px 0 8px}pre{white-space:pre-wrap;font:inherit;line-height:1.65;background:#f6f9fa;border-radius:9px;padding:14px}#reply{min-height:230px}.notice{border-left:3px solid #dcab38;background:#fff9e9;padding:10px 12px;font-size:13px;line-height:1.6}footer{max-width:1100px;margin:10px auto 35px;padding:0 18px;color:#687d8a;font-size:12px}@media(max-width:760px){main{grid-template-columns:1fr}header{padding:20px}h1{font-size:25px}}</style></head><body><header><small>BORDERDESK · DEMO</small><h1>把海外询盘变成下一步</h1><p>识别意向 · 提醒缺口 · 起草英文回复</p></header><main><section class="card"><h2>输入一封询盘</h2><p class="muted">演示数据均为虚构。无需登录，内容仅在本页内处理，不调用外部接口。</p><label for="sample">演示场景</label><select id="sample"><option value="eu">欧洲采购：询价与交期</option><option value="sg">新加坡渠道：代理合作</option><option value="vague">信息不足：泛泛问询</option></select><label for="sender">对方称呼/公司（可改）</label><input id="sender" maxlength="100"><label for="inquiry">英文询盘原文</label><textarea id="inquiry" maxlength="4000"></textarea><label for="product">我方产品/服务（英文名称）</label><input id="product" maxlength="100"><button class="primary" id="analyze" type="button">分析并生成草稿</button><p class="muted">不自动报价、不承诺认证、交期或渠道独家权；发送前由业务人员核实。</p></section><section class="card result" aria-live="polite"><div class="strip"><h2>处理建议</h2><span class="muted" id="state">等待分析</span></div><div id="summary" class="muted">选一个虚构场景，或粘贴自己的询盘并点击分析。</div><div id="details" hidden><h3>初步分类与信号</h3><div id="tags"></div><h3>建议核对</h3><div class="notice" id="checks"></div><h3>英文回复草稿 · 可编辑</h3><textarea id="reply" aria-label="英文回复草稿"></textarea><button class="sub" id="copy" type="button">复制草稿</button><span id="copyState" class="muted" role="status"></span></div></section></main><footer>规则式原型｜关键词提示与模板草稿，不是法律、合规或市场准入判断；不声称已集成大模型。</footer><script>const samples={eu:{sender:'Alex / Northbridge Retail（虚构）',product:'custom desk lamps',inquiry:'Hello, we are looking for 500 custom desk lamps for our EU stores. Could you share a price range, MOQ, lead time and any relevant certification documents? We would like samples first. Best, Alex.'},sg:{sender:'Maya / Harbor Distribution（虚构）',product:'smart office accessories',inquiry:'Hi, we distribute office accessories in Singapore. Are you open to a distribution partnership? Please send your catalogue, standard MOQ and sample policy. We would also like to discuss exclusive rights.'},vague:{sender:'Taylor（虚构）',product:'office supplies',inquiry:'Hello, I am interested in your products. Please send more information. Thanks.'}};const $=id=>document.getElementById(id);function load(){let s=samples[$('sample').value];for(let k of ['sender','product','inquiry'])$(k).value=s[k];$('details').hidden=true;$('summary').textContent='已载入虚构示例。点击分析查看建议。';$('state').textContent='等待分析'}$('sample').addEventListener('change',load);load();function analyze(){let text=$('inquiry').value.trim(),product=$('product').value.trim(),sender=$('sender').value.trim();if(!text||!product){$('details').hidden=true;$('summary').textContent='请填写询盘原文和我方产品/服务。';$('state').textContent='输入不完整';return}let price=/price|quotation|quote|cost/i.test(text),qty=/\b\d+\b|moq|quantity|volume/i.test(text),delivery=/lead time|deliver|shipping|shipment/i.test(text),sample=/sample/i.test(text),cert=/certif|compliance|ce\b|fcc\b/i.test(text),exclusive=/exclusive/i.test(text),partner=/distribut|partnership|reseller|agent\b/i.test(text);let signals=[price?'询价':'待澄清需求',qty?'涉及数量/MOQ':'数量未明确',partner?'渠道合作':'采购询盘'];if(cert)signals.push('认证资料请求');if(exclusive)signals.push('独家诉求');$('tags').replaceChildren(...signals.map((s)=>{let el=document.createElement('span');el.className='tag'+((cert&&s==='认证资料请求')||(exclusive&&s==='独家诉求')?' warn':'');el.textContent=s;return el}));let checks=[];if(price)checks.push('报价前确认规格、币种、贸易术语和有效期；不得凭模板填价格。');if(qty)checks.push('核对实际数量、MOQ、生产能力和样品政策。');else checks.push('询问预计数量、目标市场与采购时间。');if(delivery)checks.push('交期与运输方式由业务/供应链确认后再承诺。');if(cert)checks.push('先核对适用市场及现有真实认证文件，不推断产品已合规。');if(exclusive)checks.push('独家权益需经商务授权与合同审核，本草稿不作承诺。');$('checks').textContent=checks.join(' ');let name=sender.split(/[\/（(]/)[0].trim()||'there';let lines=[`Dear ${name},`,'',`Thank you for your interest in our ${product}. We would be glad to learn more about your requirements.`,''];if(price||qty)lines.push('Could you confirm the product specifications, estimated order quantity and destination market?');if(partner)lines.push('For a potential distribution arrangement, could you share your sales channels, target customers and expected annual volume?');if(sample)lines.push('We can discuss sample options after confirming the required specifications and shipping destination.');if(delivery)lines.push('We will confirm an achievable lead time after reviewing the final specifications and quantity.');if(cert)lines.push('We will check which supporting documents are available for the relevant market before sharing them.');if(exclusive)lines.push('Any exclusivity terms would require a separate commercial review.');if(!price&&!partner&&!sample&&!delivery&&!cert&&!exclusive)lines.push('Please tell us which items interest you, your estimated quantity and the market you serve.');lines.push('','Once we have these details, we can propose the next step.','', 'Best regards,','Your team');$('reply').value=lines.join('\n');$('summary').textContent=`规则识别了 ${signals.length} 类信号；请人工复核，不代表客户资质或成交概率。`;$('state').textContent='草稿已生成';$('details').hidden=false;$('copyState').textContent=''}$('analyze').addEventListener('click',analyze);$('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('reply').value);$('copyState').textContent=' 已复制'}catch(e){$('reply').focus();$('reply').select();$('copyState').textContent=' 请手动复制选中的文本'}});</script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BorderDesk｜出海询盘助手</title>
+<style>
+:root{
+  --navy:#112e43; --navy-2:#0d2434; --teal:#087d76; --teal-2:#58b9a9;
+  --ink:#172a38; --muted:#607482; --line:#dce5e9; --bg:#f3f6f8;
+  --amber:#815900; --amber-bg:#fff2d7; --surface:#fff;
+  --radius:14px; --radius-s:8px;
+  --font:system-ui,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);color:var(--ink);background:var(--bg);line-height:1.6}
+header{background:var(--navy);color:#fff;padding:22px max(20px,calc((100vw - 1100px)/2))}
+header small{color:var(--teal-2);letter-spacing:.14em}
+h1{margin:5px 0;font-size:30px}
+header p{margin:0;color:#c8d7e0}
+main{max-width:1100px;margin:25px auto;padding:0 18px;display:grid;grid-template-columns:340px 1fr;gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:0 5px 22px #122b3b08}
+h2{font-size:18px;margin:0 0 16px}
+label{display:block;font-weight:650;font-size:13px;margin:16px 0 6px}
+textarea,input,select{width:100%;border:1px solid #bfd0d9;border-radius:var(--radius-s);padding:10px;font:inherit;background:var(--surface);color:var(--ink)}
+textarea{min-height:130px;resize:vertical}
+button{border:0;border-radius:var(--radius-s);padding:11px 15px;font:inherit;font-weight:700;cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--teal-2);outline-offset:2px}
+.primary{background:var(--teal);color:#fff;width:100%;margin-top:18px}
+.primary:disabled{background:#9fb3c1;cursor:not-allowed}
+.sub{background:#e9f3f2;color:#075e59}
+.muted{color:var(--muted);font-size:13px;line-height:1.55}
+.tag{display:inline-block;background:#e5f4f1;color:#006b62;border-radius:100px;padding:5px 10px;font-size:12px;font-weight:700;margin:0 5px 5px 0}
+.tag.warn{background:var(--amber-bg);color:var(--amber)}
+.tag.ai{background:#e8ecfb;color:#2a44b0}
+.result{min-height:350px}
+.strip{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid #e1eaee;padding-bottom:14px;margin-bottom:14px;align-items:center}
+h3{font-size:14px;margin:20px 0 8px}
+.notice{border-left:3px solid #dcab38;background:#fff9e9;padding:10px 12px;font-size:13px;line-height:1.6}
+.modebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}
+.badge{font-size:11px;font-weight:800;letter-spacing:.04em;border-radius:100px;padding:3px 9px}
+.badge.rule{background:#e5f4f1;color:#006b62}
+.badge.llm{background:#e8ecfb;color:#2a44b0}
+details.aiconf{border:1px solid var(--line);border-radius:var(--radius-s);padding:10px 12px;margin-top:14px;background:#f6f9fa}
+details.aiconf summary{cursor:pointer;font-weight:700;font-size:13px;list-style:none}
+details.aiconf summary::-webkit-details-marker{display:none}
+details.aiconf[open] summary{margin-bottom:8px}
+.airow{display:flex;align-items:center;gap:10px;margin:8px 0}
+.airow label{margin:0;flex:1}
+.switch{position:relative;width:44px;height:24px;flex:0 0 auto}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:#c2ccd4;border-radius:24px;cursor:pointer;transition:.15s}
+.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}
+.switch input:checked + .slider{background:var(--teal)}
+.switch input:checked + .slider:before{transform:translateX(20px)}
+.switch input:focus-visible + .slider{outline:3px solid var(--teal-2);outline-offset:2px}
+.aifeedback{font-size:12px;color:var(--muted);margin-top:6px;min-height:1em}
+.err{color:#b3261e;font-size:12px;margin-top:6px}
+footer{max-width:1100px;margin:10px auto 35px;padding:0 18px;color:var(--muted);font-size:12px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid #c2ccd4;border-top-color:var(--teal);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:760px){main{grid-template-columns:1fr}header{padding:20px}h1{font-size:25px}}
+</style>
+</head>
+<body>
+<header>
+  <small>BORDERDESK · DEMO</small>
+  <h1>把海外询盘变成下一步</h1>
+  <p>识别意向 · 提醒缺口 · 起草英文回复 · 可选 AI 增强</p>
+</header>
+<main>
+  <section class="card">
+    <h2>输入一封询盘</h2>
+    <p class="muted">演示数据均为虚构。默认规则模式完全本地运行；只有你主动开启 AI 并填入自己的密钥时，才会把询盘内容发送给你指定的模型服务。</p>
+
+    <details class="aiconf" id="aiConf">
+      <summary>⚙️ AI 增强（可选，默认关闭）</summary>
+      <div class="airow">
+        <label for="aiOn">启用大模型增强分类与草稿</label>
+        <span class="switch"><input type="checkbox" id="aiOn"><span class="slider"></span></span>
+      </div>
+      <div id="aiFields" hidden>
+        <label for="aiEndpoint">接口地址（OpenAI 兼容）</label>
+        <input id="aiEndpoint" placeholder="https://api.openai.com/v1/chat/completions" autocomplete="off">
+        <label for="aiModel">模型名称</label>
+        <input id="aiModel" placeholder="gpt-4o-mini / Qwen2.5-72B-Instruct 等" autocomplete="off">
+        <label for="aiKey">API Key（仅保存在当前页面内存，不落库、不持久化）</label>
+        <input id="aiKey" type="password" placeholder="sk-..." autocomplete="off">
+        <p class="muted">启用后：询盘文本会发送到上述接口用于分类与草稿生成。关闭开关即回到纯本地规则，不发生任何网络请求。请自行确认接口合规与费用。</p>
+      </div>
+    </details>
+
+    <label for="sample">演示场景</label>
+    <select id="sample">
+      <option value="eu">欧洲采购：询价与交期</option>
+      <option value="sg">新加坡渠道：代理合作</option>
+      <option value="vague">信息不足：泛泛问询</option>
+    </select>
+    <label for="sender">对方称呼/公司（可改）</label>
+    <input id="sender" maxlength="100">
+    <label for="inquiry">英文询盘原文</label>
+    <textarea id="inquiry" maxlength="4000"></textarea>
+    <label for="product">我方产品/服务（英文名称）</label>
+    <input id="product" maxlength="100">
+    <button class="primary" id="analyze" type="button">分析并生成草稿</button>
+    <p class="muted">不自动报价、不承诺认证、交期或渠道独家权；发送前由业务人员核实。</p>
+  </section>
+
+  <section class="card result" aria-live="polite">
+    <div class="strip">
+      <h2>处理建议</h2>
+      <span class="modebar">
+        <span class="badge rule" id="modeBadge">规则模式</span>
+        <span class="muted" id="state">等待分析</span>
+      </span>
+    </div>
+    <div id="summary" class="muted">选一个虚构场景，或粘贴自己的询盘并点击分析。</div>
+    <div id="details" hidden>
+      <h3>初步分类与信号</h3>
+      <div id="tags"></div>
+      <h3>建议核对</h3>
+      <div class="notice" id="checks"></div>
+      <h3 id="replyTitle">英文回复草稿 · 可编辑</h3>
+      <textarea id="reply" aria-label="英文回复草稿"></textarea>
+      <button class="sub" id="copy" type="button">复制草稿</button>
+      <span id="copyState" class="muted" role="status"></span>
+      <div class="aifeedback" id="aiFeedback"></div>
+    </div>
+  </section>
+</main>
+<footer>规则式原型 · 可选 AI 增强（默认关闭）｜关键词提示与模板草稿，不是法律、合规或市场准入判断；不承诺自动发送。</footer>
+<script>
+const samples={
+  eu:{sender:'Alex / Northbridge Retail（虚构）',product:'custom desk lamps',
+    inquiry:'Hello, we are looking for 500 custom desk lamps for our EU stores. Could you share a price range, MOQ, lead time and any relevant certification documents? We would like samples first. Best, Alex.'},
+  sg:{sender:'Maya / Harbor Distribution（虚构）',product:'smart office accessories',
+    inquiry:'Hi, we distribute office accessories in Singapore. Are you open to a distribution partnership? Please send your catalogue, standard MOQ and sample policy. We would also like to discuss exclusive rights.'},
+  vague:{sender:'Taylor（虚构）',product:'office supplies',
+    inquiry:'Hello, I am interested in your products. Please send more information. Thanks.'}
+};
+const $=id=>document.getElementById(id);
+const LABELS={price:'询价',qty:'数量 / MOQ',delivery:'交期',sample:'样品',cert:'认证资料请求',exclusive:'独家诉求',partner:'渠道合作'};
+
+// ---- UI: 示例载入 ----
+function load(){
+  let s=samples[$('sample').value];
+  for(let k of ['sender','product','inquiry'])$(k).value=s[k];
+  $('details').hidden=true;
+  $('summary').textContent='已载入虚构示例。点击分析查看建议。';
+  $('state').textContent='等待分析';
+  setBadge(false);
+}
+$('sample').addEventListener('change',load);
+
+// ---- UI: AI 开关（与 details 折叠联动） ----
+$('aiOn').addEventListener('change',()=>{
+  $('aiFields').hidden=!$('aiOn').checked;
+  $('aiConf').open=$('aiOn').checked;
+  updateBadgePreview();
+});
+// 展开/收起配置区时同步开关
+$('aiConf').addEventListener('toggle',()=>{
+  $('aiOn').checked=$('aiConf').open;
+  $('aiFields').hidden=!$('aiOn').checked;
+  updateBadgePreview();
+});
+function aiConfigured(){
+  return $('aiOn').checked && $('aiEndpoint').value.trim() && $('aiModel').value.trim() && $('aiKey').value.trim();
+}
+function updateBadgePreview(){ setBadge(aiConfigured()); }
+['aiEndpoint','aiModel','aiKey'].forEach(id=>$(id).addEventListener('input',updateBadgePreview));
+
+function setBadge(ai){
+  const b=$('modeBadge');
+  b.textContent=ai?'AI 增强':'规则模式';
+  b.className='badge '+(ai?'llm':'rule');
+}
+function setState(t){$('state').textContent=t;}
+function signalTags(signals,extra){
+  let out=signals.map(s=>{
+    let warn=(s===LABELS.cert||s===LABELS.exclusive);
+    return `<span class="tag${warn?' warn':''}">${s}</span>`;
+  });
+  if(extra==='ai')out.push('<span class="tag ai">AI 生成</span>');
+  return out.join('');
+}
+
+load();
+
+// ---- 规则引擎（默认，纯本地） ----
+function ruleAnalyze(text,product,sender){
+  let price=/price|quotation|quote|cost/i.test(text),
+      qty=/\b\d+\b|moq|quantity|volume/i.test(text),
+      delivery=/lead time|deliver|shipping|shipment/i.test(text),
+      sample=/sample/i.test(text),
+      cert=/certif|compliance|ce\b|fcc\b/i.test(text),
+      exclusive=/exclusive/i.test(text),
+      partner=/distribut|partnership|reseller|agent\b/i.test(text);
+  let signals=[price?LABELS.price:'待澄清需求',
+               qty?LABELS.qty:'数量未明确',
+               partner?LABELS.partner:'采购询盘'];
+  if(cert)signals.push(LABELS.cert);
+  if(exclusive)signals.push(LABELS.exclusive);
+  if(sample)signals.push(LABELS.sample);
+  if(delivery)signals.push(LABELS.delivery);
+
+  let checks=[];
+  if(price)checks.push('报价前确认规格、币种、贸易术语和有效期；不得凭模板填价格。');
+  if(qty)checks.push('核对实际数量、MOQ、生产能力和样品政策。');
+  else checks.push('询问预计数量、目标市场与采购时间。');
+  if(delivery)checks.push('交期与运输方式由业务/供应链确认后再承诺。');
+  if(cert)checks.push('先核对适用市场及现有真实认证文件，不推断产品已合规。');
+  if(exclusive)checks.push('独家权益需经商务授权与合同审核，本草稿不作承诺。');
+
+  let name=sender.split(/[\/（(]/)[0].trim()||'there';
+  let lines=[`Dear ${name},`,'',
+    `Thank you for your interest in our ${product}. We would be glad to learn more about your requirements.`,''];
+  if(price||qty)lines.push('Could you confirm the product specifications, estimated order quantity and destination market?');
+  if(partner)lines.push('For a potential distribution arrangement, could you share your sales channels, target customers and expected annual volume?');
+  if(sample)lines.push('We can discuss sample options after confirming the required specifications and shipping destination.');
+  if(delivery)lines.push('We will confirm an achievable lead time after reviewing the final specifications and quantity.');
+  if(cert)lines.push('We will check which supporting documents are available for the relevant market before sharing them.');
+  if(exclusive)lines.push('Any exclusivity terms would require a separate commercial review.');
+  if(!price&&!partner&&!sample&&!delivery&&!cert&&!exclusive)
+    lines.push('Please tell us which items interest you, your estimated quantity and the market you serve.');
+  lines.push('','Once we have these details, we can propose the next step.','','Best regards,','Your team');
+
+  return {signals,checks,reply:lines.join('\n'),engine:'rule'};
+}
+// ---- 可选 AI 增强（OpenAI 兼容接口） ----
+const SYSTEM_PROMPT =
+  'You classify inbound B2B export inquiries and draft a concise professional English reply. ' +
+  'Detect which of these signals are present: price, quantity/MOQ, lead time, sample, certification, exclusivity, distribution partnership. ' +
+  'Never quote prices, never promise certifications, lead times, or exclusivity — only note what needs human verification. ' +
+  'Respond ONLY with JSON: {"signals":[string],"summary":string,"reply":string}. ' +
+  'signals: subset of ["询价","数量/MOQ","交期","样品","认证资料请求","独家诉求","渠道合作"]. ' +
+  'summary: one Chinese sentence describing intent and what is missing. ' +
+  'reply: an editable English email draft addressed to the sender.';
+
+async function aiAnalyze(text,product,sender){
+  const endpoint=$('aiEndpoint').value.trim();
+  const model=$('aiModel').value.trim();
+  const key=$('aiKey').value.trim();
+  const userMsg=`Product/service: ${product}\nSender: ${sender}\n\nInquiry:\n${text}`;
+  let resp;
+  try{
+    resp=await fetch(endpoint,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({
+        model,
+        temperature:0.2,
+        messages:[
+          {role:'system',content:SYSTEM_PROMPT},
+          {role:'user',content:userMsg}
+        ]
+      })
+    });
+  }catch(e){
+    throw new Error('网络请求失败：'+e.message);
+  }
+  if(!resp.ok){
+    let t=await resp.text().catch(()=>'');
+    throw new Error(`接口返回 ${resp.status}：${t.slice(0,200)}`);
+  }
+  const data=await resp.json();
+  const content=data?.choices?.[0]?.message?.content;
+  if(!content)throw new Error('接口响应中未找到生成内容');
+  let parsed;
+  try{
+    const json=content.slice(content.indexOf('{'),content.lastIndexOf('}')+1);
+    parsed=JSON.parse(json);
+  }catch(e){
+    throw new Error('模型输出不是有效 JSON，原始内容：'+content.slice(0,200));
+  }
+  if(!Array.isArray(parsed.signals)||!parsed.reply)throw new Error('模型 JSON 缺少 signals 或 reply 字段');
+  return {
+    signals:parsed.signals,
+    summary:parsed.summary||'',
+    reply:parsed.reply,
+    engine:'ai'
+  };
+}
+
+// ---- 统一入口 ----
+function fallbackChecks(signals){
+  let has=p=>signals.includes(LABELS[p])||signals.some(s=>s.includes(p));
+  let c=[];
+  if(has('询价'))c.push('报价前确认规格、币种、贸易术语和有效期；不得凭模板填价格。');
+  if(has('数量'))c.push('核对实际数量、MOQ、生产能力和样品政策。');
+  else c.push('询问预计数量、目标市场与采购时间。');
+  if(has('交期'))c.push('交期与运输方式由业务/供应链确认后再承诺。');
+  if(has('认证'))c.push('先核对适用市场及现有真实认证文件，不推断产品已合规。');
+  if(has('独家'))c.push('独家权益需经商务授权与合同审核，本草稿不作承诺。');
+  return c;
+}
+
+async function analyze(){
+  let text=$('inquiry').value.trim(),product=$('product').value.trim(),sender=$('sender').value.trim();
+  if(!text||!product){
+    $('details').hidden=true;
+    $('summary').textContent='请填写询盘原文和我方产品/服务。';
+    setState('输入不完整');
+    return;
+  }
+  const useAI=aiConfigured();
+  $('analyze').disabled=true;
+  $('copyState').textContent='';
+  $('aiFeedback').textContent='';
+  if(useAI){
+    setState('AI 分析中…');
+    $('analyze').innerHTML='<span class="spin"></span>AI 分析中…';
+  }else{
+    setState('规则分析中…');
+    $('analyze').textContent='分析中…';
+  }
+  try{
+    let r=useAI?await aiAnalyze(text,product,sender):ruleAnalyze(text,product,sender);
+    render(r,useAI);
+  }catch(e){
+    // AI 失败 → 降级到规则，明确告知
+    let r=ruleAnalyze(text,product,sender);
+    render(r,false);
+    setBadge(false);
+    $('aiFeedback').innerHTML=`<span class="err">⚠️ AI 调用失败，已回退到规则模式：${e.message}</span>`;
+  }finally{
+    $('analyze').disabled=false;
+    $('analyze').textContent='分析并生成草稿';
+  }
+}
+
+function render(r,ai){
+  $('tags').innerHTML=signalTags(r.signals,ai?'ai':'');
+  const checks=r.checks||fallbackChecks(r.signals);
+  $('checks').textContent=checks.join(' ');
+  $('reply').value=r.reply;
+  if(r.summary){
+    $('summary').textContent=r.summary+(ai?'（AI 生成，请人工复核）':'');
+  }else{
+    $('summary').textContent=`规则识别了 ${r.signals.length} 类信号；请人工复核，不代表客户资质或成交概率。`;
+  }
+  setState(ai?'AI 草稿已生成':'草稿已生成');
+  $('replyTitle').textContent=ai?'英文回复草稿 · AI 生成 · 可编辑':'英文回复草稿 · 可编辑';
+  $('details').hidden=false;
+  if(!ai)$('aiFeedback').textContent='';
+}
+
+$('analyze').addEventListener('click',analyze);
+
+// ---- 复制 ----
+$('copy').addEventListener('click',async()=>{
+  try{
+    await navigator.clipboard.writeText($('reply').value);
+    $('copyState').textContent=' 已复制';
+  }catch(e){
+    $('reply').focus();$('reply').select();
+    $('copyState').textContent=' 请手动复制选中的文本';
+  }
+});
+
+// ---- 回车提交 ----
+$('inquiry').addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter')analyze();
+});
+</script>
+</body>
+</html>
