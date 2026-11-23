@@ -87,8 +87,51 @@ def _is_forbidden(message: str) -> bool:
     return bool(_FORBIDDEN_PAT.search(message))
 
 
-def _route(message: str) -> list[tuple[str, dict]]:
-    """返回该消息应调用的 [(工具名, 参数)] 计划；miss 时返回空列表由上层给引导。"""
+# 用于「为什么…那条…」按标题定位发现的线索词 -> finding 标题关键词。
+# 值为标题中会出现的特征词；匹配时对快照里的 finding 标题做「标题含该词」判断。
+_TITLE_HINTS: list[tuple[str, tuple[str, ...]]] = [
+    ("磁盘", ("磁盘",)),
+    ("健康检查", ("健康检查",)),
+    ("502", ("健康检查", "502")),
+    ("证书", ("证书",)),
+    ("过期", ("证书",)),
+    ("cpu", ("CPU",)),
+    ("抽取", ("抽取",)),
+    ("耗时", ("抽取",)),
+    ("备份", ("备份超时", "无有效成功")),
+    ("负责人", ("缺少负责人",)),
+    ("缺少备份", ("缺少对应备份",)),
+    ("单机", ("单机承载",)),
+    ("多个关键服务", ("单机承载",)),
+]
+
+
+def _match_finding_by_title(message: str, snapshot: dict | None) -> str | None:
+    """按消息里的标题线索词，在快照中发现里定位唯一对应的 finding id。
+
+    命中多条时不猜——返回 None，交回上层走列表展示，避免编造。
+    """
+    if not snapshot:
+        return None
+    m = message.lower()
+    # 命中的特征词集合（对每条 finding 标题判断是否包含线索对应的标题特征）
+    candidates: set[str] = set()
+    for hint, title_keys in _TITLE_HINTS:
+        if hint.lower() in m:
+            for f in snapshot.get("findings", []):
+                title = f.get("title") or ""
+                if any(k.lower() in title.lower() for k in title_keys):
+                    candidates.add(f["id"])
+    if len(candidates) == 1:
+        return next(iter(candidates))
+    return None
+
+
+def _route(message: str, snapshot: dict | None = None) -> list[tuple[str, dict]]:
+    """返回该消息应调用的 [(工具名, 参数)] 计划；miss 时返回空列表由上层给引导。
+
+    snapshot 可选传入：用于在追问「为什么」但未给 F-id 时，按标题关键词定位对应发现。
+    """
     m = message
     plan: list[tuple[str, dict]] = []
     host_match = re.search(r"\b(srv[-\w]*|host[-\w]*|\d{1,3}(?:\.\d{1,3}){3})\b", m)
@@ -105,9 +148,17 @@ def _route(message: str) -> list[tuple[str, dict]]:
         return plan
 
     # 为什么（追问证据）—— 提到最前，避免被资产/概览吞掉
-    if fid and any(k in m for k in ("为什么", "为啥", "证据", "原因", "阻断", "警告", "详情")):
-        plan.append(("get_finding_detail", {"id": fid.group(1)}))
-        return plan
+    if any(k in m for k in ("为什么", "为啥", "证据", "原因", "详情")) or (
+        fid and any(k in m for k in ("阻断", "警告"))
+    ):
+        if fid:
+            plan.append(("get_finding_detail", {"id": fid.group(1)}))
+            return plan
+        # 未给 id：按标题关键词定位唯一对应发现（如「为什么磁盘那条是阻断」）
+        target = _match_finding_by_title(m, snapshot)
+        if target:
+            plan.append(("get_finding_detail", {"id": target}))
+            return plan
 
     # 资产查询：主机名 / 明确资产词 / 有哪些。不含泛化的“什么”。
     asset_kw = any(k in m for k in ("资产", "台账", "有哪些", "上有什么", "搜索", "查找"))
@@ -336,8 +387,8 @@ def handle(message: str, session_id: str | None = None) -> TurnResult:
     now = datetime.now(CST)
     snapshot = oc.build_state(now)
 
-    # 路由出工具计划
-    plan = _route(message)
+    # 路由出工具计划（带快照：追问「为什么」时可按标题定位发现）
+    plan = _route(message, snapshot)
     results: dict = {}
     traces: list[Trace] = []
     for name, args in plan[:MAX_STEPS]:
@@ -358,7 +409,9 @@ def handle(message: str, session_id: str | None = None) -> TurnResult:
         elif not answer:
             answer = "工具已执行，但没有组织出回答；请换个说法再试。"
 
-    findings_ref = [f["id"] for f in snapshot["findings"] if f["id"] in answer]
+    # 用词边界匹配，避免 F1 被误当成 F13 的子串
+    findings_ref = [f["id"] for f in snapshot["findings"]
+                    if re.search(r"\b" + re.escape(f["id"]) + r"\b", answer)]
     duration_ms = int((time.time() - t0) * 1000)
     _audit({
         "time": datetime.now(CST).isoformat(), "session": session_id, "message": message,

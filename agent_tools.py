@@ -183,6 +183,47 @@ def tool_check_data_quality(snapshot: dict, args: dict) -> dict:
     return {"checks": oc.validate_data_structured()}
 
 
+def tool_search_ip_ledger(snapshot: dict, args: dict) -> dict:
+    """搜索单位设备 IP 台账（真实数据，仅本地）。按 IP/人员/房间/型号/MAC/备注匹配。
+
+    这是工作台第一个非值班场景的工具：台账稀疏字段如实返回，缺就空，不编造。
+    """
+    import ip_ledger as il
+    q = (args.get("q") or "").strip()
+    limit = int(args.get("limit") or 20)
+    res = il.search_records(q, limit=limit)
+    if not res.get("ok"):
+        return {"error": res.get("error", "台账读取失败"), "query": q}
+    return {
+        "query": q,
+        "sheet": res["sheet"],
+        "matched": res["matched"],
+        "total_in_sheet": res["total"],
+        "records": [
+            {k: rec.get(k, "") for k in
+             ("ip", "person", "room", "model", "mac", "asset_no", "host_no", "disk_no", "remark")}
+            for rec in res["records"]
+        ],
+    }
+
+
+def tool_ip_ledger_stats(snapshot: dict, args: dict) -> dict:
+    """设备 IP 台账概况：总记录数、各字段填充率、可用历史快照。"""
+    import ip_ledger as il
+    data = il.load_records()
+    if not data.get("ok"):
+        return {"error": data.get("error", "台账读取失败")}
+    sheets = il.load_sheets().get("sheets", [])
+    return {
+        "sheet": data["sheet"],
+        "total": data["total"],
+        "filled": data["filled"],
+        "columns": data["columns"],
+        "history_snapshots": [s["name"] for s in sheets],
+        "history_count": len(sheets),
+    }
+
+
 def tool_get_handover(snapshot: dict, args: dict) -> dict:
     """交接班 Markdown 全文；Agent 可引用/摘要，但不重写数字。"""
     return {"handover_markdown": snapshot["handover"]}
@@ -267,6 +308,19 @@ TOOLS = {
             "hours": {"type": "number", "minimum": 1, "maximum": 168},
         }, "required": []},
         "fn": tool_get_recent_changes,
+    },
+    "search_ip_ledger": {
+        "description": "搜索单位设备 IP 台账（本地真实数据）。按 IP/人员/房间/设备型号/MAC/备注匹配。用于『某个 IP 是谁/在哪个房间』『查某人的设备』『某房间的机器』。",
+        "schema": {"type": "object", "properties": {
+            "q": {"type": "string", "description": "关键词：IP 片段、人员姓名、房间号、型号、MAC 等"},
+            "limit": {"type": "integer", "minimum": 1, "maximum": 50},
+        }, "required": ["q"]},
+        "fn": tool_search_ip_ledger,
+    },
+    "ip_ledger_stats": {
+        "description": "设备 IP 台账概况：总记录数、各字段填充率、可用历史快照列表。",
+        "schema": {"type": "object", "properties": {}, "required": []},
+        "fn": tool_ip_ledger_stats,
     },
 }
 

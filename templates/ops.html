@@ -70,6 +70,7 @@ pre{white-space:pre-wrap;font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monosp
     <div class="tab" data-tab="alerts">告警</div>
     <div class="tab" data-tab="backups">备份</div>
     <div class="tab" data-tab="assets">资产台账</div>
+    <div class="tab" data-tab="ipledger">IP 台账</div>
     <div class="tab" data-tab="handover">交接班</div>
   </div>
   <div class="grid">
@@ -90,6 +91,11 @@ pre{white-space:pre-wrap;font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monosp
         <h2>资产台账</h2>
         <input type="text" id="assetSearch" placeholder="搜索名称 / IP / 负责人 / 厂商 / 主机">
         <table style="margin-top:10px"><thead><tr><th>名称</th><th>类型</th><th>IP/主机</th><th>负责人</th><th>环境</th></tr></thead><tbody id="assetsBody"></tbody></table>
+      </div>
+      <div class="card" id="panel-ipledger" style="display:none">
+        <h2>设备 IP 台账 <span class="muted" id="ipLedgerMeta" style="font-weight:normal;font-size:13px"></span></h2>
+        <input type="text" id="ipLedgerSearch" placeholder="搜索 IP / 人员 / 房间 / 型号 / MAC / 备注">
+        <table style="margin-top:10px"><thead><tr><th>IP</th><th>人员</th><th>房间</th><th>型号</th><th>备注</th></tr></thead><tbody id="ipLedgerBody"></tbody></table>
       </div>
       <div class="card" id="panel-handover" style="display:none">
         <h2>交接班</h2>
@@ -178,6 +184,40 @@ function renderAssets(rows) {
   </tr>`).join('');
 }
 
+let ipLedgerLoaded = false;
+async function loadIpLedger(q) {
+  const url = '/api/ip-ledger' + (q ? ('?q=' + encodeURIComponent(q)) : '');
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.ok) {
+      $('ipLedgerBody').innerHTML = `<tr><td colspan="5" class="muted">${esc(data.error || '台账不可用')}</td></tr>`;
+      $('ipLedgerMeta').textContent = '';
+      return;
+    }
+    renderIpLedger(data.records || []);
+    $('ipLedgerMeta').textContent = data.query
+      ? `匹配 ${data.matched} 条（共 ${data.total_in_sheet}）`
+      : `共 ${data.total} 条 · sheet ${data.sheet}`;
+  } catch (e) {
+    $('ipLedgerBody').innerHTML = '<tr><td colspan="5" class="muted">加载失败：' + esc(String(e)) + '</td></tr>';
+  }
+}
+
+function renderIpLedger(rows) {
+  if (!rows.length) {
+    $('ipLedgerBody').innerHTML = '<tr><td colspan="5" class="muted">没有匹配的记录。</td></tr>';
+    return;
+  }
+  $('ipLedgerBody').innerHTML = rows.map(r => `<tr>
+    <td>${esc(r.ip)}</td>
+    <td>${esc(r.person || '—')}</td>
+    <td>${esc(r.room || '—')}</td>
+    <td>${esc(r.model || '—')}</td>
+    <td>${esc(r.remark || '—')}</td>
+  </tr>`).join('');
+}
+
 async function ack(id) {
   await fetch('/api/ack', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, action:'ack'})});
   const el = document.querySelector(`[data-id="${id}"]`);
@@ -187,9 +227,10 @@ async function ack(id) {
 document.querySelectorAll('.tab').forEach(tab => tab.onclick = () => {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   tab.classList.add('active');
-  ['findings','alerts','backups','assets','handover'].forEach(name => {
+  ['findings','alerts','backups','assets','ipledger','handover'].forEach(name => {
     $('panel-' + name).style.display = name === tab.dataset.tab ? '' : 'none';
   });
+  if (tab.dataset.tab === 'ipledger') loadIpLedger();
 });
 
 $('refresh').onclick = load;
@@ -197,6 +238,10 @@ $('xhxBtn').onclick = () => { $('xhxPrompt').scrollIntoView({behavior:'smooth', 
 $('assetSearch').addEventListener('input', (e) => {
   const q = e.target.value.trim().toLowerCase();
   renderAssets((state.assets_list || []).filter(a => [a.name,a.id,a.ip,a.host,a.owner,a.vendor,a.type].some(v => String(v||'').toLowerCase().includes(q))));
+});
+$('ipLedgerSearch').addEventListener('input', (e) => {
+  const q = e.target.value.trim();
+  loadIpLedger(q);
 });
 load();
 </script>

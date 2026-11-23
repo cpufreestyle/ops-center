@@ -686,6 +686,15 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/xhx-prompt":
             self._json({"prompt": build_state()["xhx_prompt"]})
             return
+        if parsed.path == "/api/ip-ledger":
+            q = parse_qs(parsed.query).get("q", [""])[0]
+            try:
+                import ip_ledger as il
+                res = il.search_records(q, limit=200)
+                self._json(res)
+            except Exception as e:  # noqa: BLE001
+                self._json({"ok": False, "error": str(e), "query": q, "records": [], "matched": 0})
+            return
         if parsed.path == "/healthz":
             self._json({"ok": True, "generated_at": build_state()["generated_at"]})
             return
