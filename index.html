@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BorderDesk｜把海外询盘变成下一步</title>
-<meta name="description" content="BorderDesk 出海询盘助手：识别海外英文询盘的意向信号，提醒待核实缺口，起草可编辑的英文回复。规则式原型，本地运行。">
+<meta name="description" content="BorderDesk 出海询盘助手：识别海外英文询盘的意向信号，提醒待核实缺口，起草可编辑的英文回复。默认规则式、本地运行，可选 AI 增强。">
 <style>
 :root{
   --navy:#112e43; --navy-2:#0d2434; --teal:#087d76; --teal-2:#58b9a9;
@@ -62,6 +62,7 @@ section.alt{background:var(--bg)}
 .cap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--s3)}
 .cap .tag{display:inline-block;background:#e5f4f1;color:#006b62;border-radius:100px;padding:4px 10px;font-size:12px;font-weight:700;margin:0 4px 4px 0}
 .cap .tag.warn{background:var(--amber-bg);color:var(--amber)}
+.cap .tag.ai{background:#e8ecfb;color:#2a44b0}
 .cap h3{font-size:18px;margin:0 0 var(--s1)}
 .cap p{color:var(--muted);margin:0;font-size:15px}
 /* preview */
@@ -123,7 +124,7 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(-
       <a class="btn btn-primary" href="borderdesk/">在线体验原型 →</a>
       <a class="btn btn-ghost" href="#how">了解工作方式</a>
     </div>
-    <p class="meta">规则式原型 · 浏览器本地运行 · 演示数据均为虚构 · 不调用外部接口</p>
+    <p class="meta">规则式原型 · 默认浏览器本地运行 · 可选 AI 增强 · 演示数据均为虚构</p>
   </div>
 </div>
 
@@ -158,13 +159,13 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(-
   <div class="wrap">
     <div class="sec-head">
       <h2>规则驱动，边界清晰</h2>
-      <p>当前是规则式原型，不声称大模型理解。每一类信号都对应明确的核对动作。</p>
+      <p>默认用规则分类，每一类信号都对应明确的核对动作；需要更自然的理解时，可开启可选 AI 增强。</p>
     </div>
     <div class="caps">
       <div class="cap"><span class="tag">询价</span><span class="tag">数量 / MOQ</span><span class="tag">交期</span><h3>采购意向分流</h3><p>把"询价 + 数量 + 交期"这类可推进的信号与泛泛问询区分开，优先处理真正有机会的询盘。</p></div>
       <div class="cap"><span class="tag warn">认证资料</span><span class="tag warn">独家诉求</span><h3>高风险项单独提示</h3><p>认证文件与独家权益不自动作答，先提醒核对适用市场与商务授权，避免草率承诺。</p></div>
       <div class="cap"><h3>可编辑英文草稿</h3><p>生成结构完整的回信骨架，业务人员在此基础上改细节，而不是从零写第一句。</p></div>
-      <div class="cap"><h3>本地运行，不留数据</h3><p>所有逻辑在浏览器内完成，输入内容不外发、不落库；演示数据均为虚构。</p></div>
+      <div class="cap"><span class="tag ai">可选 AI</span><h3>默认本地，可选 AI 增强</h3><p>默认纯规则、离线运行、输入不外发；也可选填自己的模型接口启用 AI 增强分类与草稿，失败自动回退规则。</p></div>
     </div>
   </div>
 </section>
@@ -195,8 +196,8 @@ We will check which supporting documents are available for the relevant market b
 <section id="faq">
   <div class="wrap">
     <div class="sec-head"><h2>边界与说明</h2><p>诚实标注当前能力，避免误当成交付系统。</p></div>
-    <details open><summary>这是大模型产品吗？</summary><p>不是。当前是关键词规则 + 模板草稿的原型，用于验证最短闭环；不声称已集成大模型，也不做法律、合规或市场准入判断。</p></details>
-    <details><summary>我的询盘会被上传吗？</summary><p>不会。页面在浏览器本地处理，不调用外部接口，输入内容不外发。</p></details>
+    <details open><summary>这是大模型产品吗？</summary><p>默认不是。当前是关键词规则 + 模板草稿的原型；如果你在原型里主动展开 AI 配置并填入自己的模型接口，才会调用大模型生成分类与草稿。默认模式不调用任何外部接口，也不做法律、合规或市场准入判断。</p></details>
+    <details><summary>我的询盘会被上传吗？</summary><p>默认模式完全在浏览器本地处理，不调用外部接口，输入内容不外发、不落库。如果你主动启用 AI 增强，询盘文本才会发送到你指定的模型接口——关闭开关即回到纯本地。</p></details>
     <details><summary>演示数据是真实的吗？</summary><p>均为虚构示例，用于展示处理流程，不代表任何真实客户或成交情况。</p></details>
     <details><summary>下一步计划？</summary><p>接入企业真实商品资料与人工审批，把"规则识别"升级为可校验的分类，并补齐多语言与跟进模板。</p></details>
   </div>
@@ -213,7 +214,7 @@ We will check which supporting documents are available for the relevant market b
 
 <footer>
   <div class="wrap">
-    <span>BorderDesk｜出海询盘助手 · 规则式原型</span>
+    <span>BorderDesk｜出海询盘助手 · 规则式原型 · 可选 AI 增强</span>
     <span>不自动报价、不承诺认证、交期或独家权；发送前由业务人员核实</span>
   </div>
 </footer>
