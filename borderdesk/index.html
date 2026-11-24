@@ -56,6 +56,11 @@ details.aiconf[open] summary{margin-bottom:8px}
 .switch input:checked + .slider:before{transform:translateX(20px)}
 .switch input:focus-visible + .slider{outline:3px solid var(--teal-2);outline-offset:2px}
 .aifeedback{font-size:12px;color:var(--muted);margin-top:6px;min-height:1em}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px}
+.preset{background:#fff;border:1px solid #bfd0d9;color:#075e59;padding:6px 11px;font-size:12px;font-weight:700;border-radius:100px;cursor:pointer}
+.preset:hover{background:#e9f3f2;border-color:var(--teal)}
+.preset:focus-visible{outline:3px solid var(--teal-2);outline-offset:2px}
+.preset.active{background:var(--teal);color:#fff;border-color:var(--teal)}
 .err{color:#b3261e;font-size:12px;margin-top:6px}
 footer{max-width:1100px;margin:10px auto 35px;padding:0 18px;color:var(--muted);font-size:12px}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid #c2ccd4;border-top-color:var(--teal);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
@@ -81,13 +86,21 @@ footer{max-width:1100px;margin:10px auto 35px;padding:0 18px;color:var(--muted);
         <span class="switch"><input type="checkbox" id="aiOn"><span class="slider"></span></span>
       </div>
       <div id="aiFields" hidden>
+        <label>常用模型预设（点击自动填入接口与模型名）</label>
+        <div class="presets" id="presets">
+          <button type="button" class="preset" data-endpoint="https://api.deepseek.com/chat/completions" data-model="deepseek-chat">DeepSeek</button>
+          <button type="button" class="preset" data-endpoint="https://api.openai.com/v1/chat/completions" data-model="gpt-4o-mini">OpenAI</button>
+          <button type="button" class="preset" data-endpoint="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" data-model="qwen-plus">通义千问</button>
+          <button type="button" class="preset" data-endpoint="https://api.siliconflow.cn/v1/chat/completions" data-model="deepseek-ai/DeepSeek-V3">硅基流动</button>
+          <button type="button" class="preset" data-endpoint="https://open.bigmodel.cn/api/paas/v4/chat/completions" data-model="glm-4-flash">智谱 GLM</button>
+        </div>
         <label for="aiEndpoint">接口地址（OpenAI 兼容）</label>
         <input id="aiEndpoint" placeholder="https://api.openai.com/v1/chat/completions" autocomplete="off">
         <label for="aiModel">模型名称</label>
-        <input id="aiModel" placeholder="gpt-4o-mini / Qwen2.5-72B-Instruct 等" autocomplete="off">
+        <input id="aiModel" placeholder="gpt-4o-mini / qwen-plus 等" autocomplete="off">
         <label for="aiKey">API Key（仅保存在当前页面内存，不落库、不持久化）</label>
         <input id="aiKey" type="password" placeholder="sk-..." autocomplete="off">
-        <p class="muted">启用后：询盘文本会发送到上述接口用于分类与草稿生成。关闭开关即回到纯本地规则，不发生任何网络请求。请自行确认接口合规与费用。</p>
+        <p class="muted">预设只填地址与模型名，API Key 仍需自行填入。启用后：询盘文本会发送到上述接口用于分类与草稿生成。关闭开关即回到纯本地规则，不发生任何网络请求。请自行确认接口合规与费用。</p>
       </div>
     </details>
 
@@ -170,6 +183,18 @@ function aiConfigured(){
 }
 function updateBadgePreview(){ setBadge(aiConfigured()); }
 ['aiEndpoint','aiModel','aiKey'].forEach(id=>$(id).addEventListener('input',updateBadgePreview));
+
+// ---- 常用模型预设：一键填入接口与模型名 ----
+document.querySelectorAll('#presets .preset').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    $('aiEndpoint').value=btn.dataset.endpoint;
+    $('aiModel').value=btn.dataset.model;
+    document.querySelectorAll('#presets .preset').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    $('aiKey').focus();
+    updateBadgePreview();
+  });
+});
 
 function setBadge(ai){
   const b=$('modeBadge');
