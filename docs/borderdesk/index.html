@@ -29,6 +29,7 @@ button:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-vis
 .primary{background:var(--teal);color:#fff;width:100%;margin-top:18px}
 .primary:disabled{background:#9fb3c1;cursor:not-allowed}
 .sub{background:#e9f3f2;color:#075e59}
+.sub.mini{padding:5px 10px;font-size:12px;font-weight:700;vertical-align:middle;margin-left:6px}
 .muted{color:var(--muted);font-size:13px;line-height:1.55}
 .tag{display:inline-block;background:#e5f4f1;color:#006b62;border-radius:100px;padding:5px 10px;font-size:12px;font-weight:700;margin:0 5px 5px 0}
 .tag.warn{background:var(--amber-bg);color:var(--amber)}
@@ -118,7 +119,7 @@ footer{max-width:1100px;margin:10px auto 35px;padding:0 18px;color:var(--muted);
     <div id="details" hidden>
       <h3>初步分类与信号</h3>
       <div id="tags"></div>
-      <h3>建议核对</h3>
+      <h3>建议核对 <button class="sub mini" id="copyChecks" type="button">复制清单</button><span id="checksState" class="muted" role="status"></span></h3>
       <div class="notice" id="checks"></div>
       <h3 id="replyTitle">英文回复草稿 · 可编辑</h3>
       <textarea id="reply" aria-label="英文回复草稿"></textarea>
@@ -189,13 +190,18 @@ load();
 
 // ---- 规则引擎（默认，纯本地） ----
 function ruleAnalyze(text,product,sender){
-  let price=/price|quotation|quote|cost/i.test(text),
-      qty=/\b\d+\b|moq|quantity|volume/i.test(text),
-      delivery=/lead time|deliver|shipping|shipment/i.test(text),
+  // 数量信号：裸数字只有紧邻单位/订单词时才算，避免 "3 factories" 之类误判
+  let qty=/(?:\bmoq\b|quantity|volume|qty|units?\b|pieces?\b|\bpcs\b|cartons?\b|containers?\b|containers?|pallets?\b|\bsets?\b|\bboxes\b)/i.test(text)
+        || /\b\d[\d,\.]*\s*(?:pcs|pieces?|units?|sets?|cartons?|containers?|pallets?|boxes?|kgs?|kg\b|tons?|pairs?)\b/i.test(text)
+        || /\b(?:order|quantity|volume)\s+(?:of|for)?\s*\d/i.test(text)
+        // 3 位以上裸数字（100/500/1000…）通常即采购数量；排除年份(19xx/20xx)与小额计数
+        || /\b(?!19\d{2}\b)(?!20\d{2}\b)\d{3,}(?:,\d{3})*\b/.test(text);
+  let price=/price|quotation|quote|cost|pricing|how much/i.test(text),
+      delivery=/lead time|deliver|shipping|shipment|delivery|arrive|transit/i.test(text),
       sample=/sample/i.test(text),
-      cert=/certif|compliance|ce\b|fcc\b/i.test(text),
+      cert=/certif|compliance|ce\b|fcc\b|iso\b|rohs\b|reach\b|fda\b|certificate/i.test(text),
       exclusive=/exclusive/i.test(text),
-      partner=/distribut|partnership|reseller|agent\b/i.test(text);
+      partner=/distribut|partnership|reseller|agent\b|wholesale|supply to/i.test(text);
   let signals=[price?LABELS.price:'待澄清需求',
                qty?LABELS.qty:'数量未明确',
                partner?LABELS.partner:'采购询盘'];
@@ -223,7 +229,7 @@ function ruleAnalyze(text,product,sender){
   if(exclusive)lines.push('Any exclusivity terms would require a separate commercial review.');
   if(!price&&!partner&&!sample&&!delivery&&!cert&&!exclusive)
     lines.push('Please tell us which items interest you, your estimated quantity and the market you serve.');
-  lines.push('','Once we have these details, we can propose the next step.','','Best regards,','Your team');
+  lines.push('','Once we have these details, we can propose the next step.','','Best regards,','[Your Name]','[Company / Title]');
 
   return {signals,checks,reply:lines.join('\n'),engine:'rule'};
 }
@@ -347,7 +353,7 @@ function render(r,ai){
 
 $('analyze').addEventListener('click',analyze);
 
-// ---- 复制 ----
+// ---- 复制（草稿 + 核对清单） ----
 $('copy').addEventListener('click',async()=>{
   try{
     await navigator.clipboard.writeText($('reply').value);
@@ -355,6 +361,14 @@ $('copy').addEventListener('click',async()=>{
   }catch(e){
     $('reply').focus();$('reply').select();
     $('copyState').textContent=' 请手动复制选中的文本';
+  }
+});
+$('copyChecks').addEventListener('click',async()=>{
+  try{
+    await navigator.clipboard.writeText($('checks').textContent);
+    $('checksState').textContent=' 已复制';
+  }catch(e){
+    $('checksState').textContent=' 请手动复制';
   }
 });
 
